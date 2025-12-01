@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assegnazione Posti Evento</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    #box {
+      margin-top: 40px;
+      padding: 20px;
+      border: 2px solid #333;
+      display: inline-block;
+      border-radius: 12px;
+      width: 320px;
+    }
+    #result {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #welcome {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    #nameInput {
+      padding: 8px;
+      font-size: 16px;
+      width: 90%;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    #error {
+      color: red;
+      margin-top: 8px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Assegnazione Posti Evento</h1>
+  <div id="box">
+    <div id="welcome">Benvenuto!</div>
+    <input id="nameInput" type="text" placeholder="Inserisci il tuo nome" />
+    <button onclick="assegnaPosto()">Ottieni il tuo posto</button>
+    <div id="error"></div>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    // Tavoli: 2 tavoli da 8 posti
+    const tavolo1 = Array.from({ length: 8 }, (_, i) => `Tavolo 1 - Posto ${i + 1}`);
+    const tavolo2 = Array.from({ length: 8 }, (_, i) => `Tavolo 2 - Posto ${i + 1}`);
+
+    let postiDisponibili = [...tavolo1, ...tavolo2];
+
+    function assegnaPosto() {
+      const nameInput = document.getElementById("nameInput");
+      const welcomeBox = document.getElementById("welcome");
+      const resultBox = document.getElementById("result");
+      const errorBox = document.getElementById("error");
+
+      const nome = nameInput.value.trim();
+
+      if (!nome) {
+        errorBox.textContent = "Per favore inserisci il tuo nome.";
+        resultBox.textContent = "";
+        return;
+      }
+
+      errorBox.textContent = "";
+
+      if (postiDisponibili.length === 0) {
+        welcomeBox.textContent = `Benvenuto, ${nome}!`;
+        resultBox.innerHTML = "Mi dispiace, non c'è posto!!<br>Ma non preoccuparti, hai un altro QR da inquadrare.";
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * postiDisponibili.length);
+      const posto = postiDisponibili[randomIndex];
+
+      postiDisponibili.splice(randomIndex, 1);
+
+      welcomeBox.textContent = `Benvenuto, ${nome}!`;
+      resultBox.innerText = `${nome}, il tuo posto è: ${posto}`;
+    }
+  </script>
+</body>
+</html>
