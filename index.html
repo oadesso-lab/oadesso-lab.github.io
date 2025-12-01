@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Assegnazione Tavoli - Evento BCC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; background-color: #f5f5f5;}
+    h1 {margin-top: 40px;}
+    .card {margin: 30px auto; padding: 20px 25px; background-color: #ffffff; border: 1px solid #ccc; border-radius: 10px; max-width: 400px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);}
+    .input-group {margin-bottom: 12px; text-align: left;}
+    .input-group label {display: block; font-size: 0.9rem; margin-bottom: 4px;}
+    .input-group input {width: 100%; padding: 8px 10px; box-sizing: border-box; border-radius: 4px; border: 1px solid #bbb; font-size: 1rem;}
+    button {padding: 10px 18px; font-size: 1rem; border-radius: 4px; border: 1px solid #444; cursor: pointer; background-color: #eee;}
+    #message {margin-top: 20px; font-size: 1.1rem; font-weight: bold; min-height: 40px;}
+    #error {margin-top: 10px; color: red; min-height: 20px; font-size: 0.9rem;}
+  </style>
+</head>
+
+<body>
+
+<h1>Assegnazione Tavoli - Evento BCC</h1>
+
+<div class="card">
+  <h2>Benvenuto!</h2>
+
+  <form id="assignForm">
+    <div class="input-group">
+      <label for="name">Nome</label>
+      <input type="text" id="name" placeholder="Inserisci il tuo nome" required>
+    </div>
+
+    <div class="input-group">
+      <label for="office">Filiale o Ufficio</label>
+      <input type="text" id="office" placeholder="Inserisci nome filiale o ufficio" required>
+    </div>
+
+    <button type="submit">Ottieni il tuo tavolo</button>
+    <div id="error"></div>
+  </form>
+
+  <div id="message"></div>
+</div>
+
+<script>
+  const TOTAL_TABLES = 30;
+  const SEATS_PER_TABLE = 8;
+
+  function loadOccupancy() {
+    const saved = localStorage.getItem('tableOccupancy_v1');
+    if (saved) {
+      try {
+        const arr = JSON.parse(saved);
+        if (Array.isArray(arr) && arr.length === TOTAL_TABLES) return arr;
+      } catch {}
+    }
+    const arr = Array(TOTAL_TABLES).fill(0);
+    localStorage.setItem('tableOccupancy_v1', JSON.stringify(arr));
+    return arr;
+  }
+
+  function saveOccupancy(o) {
+    localStorage.setItem('tableOccupancy_v1', JSON.stringify(o));
+  }
+
+  function sanitize(s) { return s.trim(); }
+
+  let tableOccupancy = loadOccupancy();
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('assignForm');
+    const nameInput = document.getElementById('name');
+    const officeInput = document.getElementById('office');
+    const messageDiv = document.getElementById('message');
+    const errorDiv = document.getElementById('error');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      errorDiv.textContent = '';
+      messageDiv.textContent = '';
+
+      const name = sanitize(nameInput.value);
+      const office = sanitize(officeInput.value);
+
+      if (!name || !office) {
+        errorDiv.textContent = 'Per favore inserisci sia il nome che la filiale/ufficio.';
+        return;
+      }
+
+      const key = 'assignment_' + name.toLowerCase() + '_' + office.toLowerCase();
+      let tableNumber;
+      let newAssign = false;
+
+      const existing = localStorage.getItem(key);
+      if (existing) {
+        tableNumber = parseInt(existing);
+      } else {
+        const next = tableOccupancy.findIndex(c => c < SEATS_PER_TABLE);
+        if (next === -1) {
+          messageDiv.textContent = 'Tutti i tavoli sono pieni. Grazie!';
+          return;
+        }
+        tableOccupancy[next]++;
+        saveOccupancy(tableOccupancy);
+        tableNumber = next + 1;
+        localStorage.setItem(key, tableNumber);
+        newAssign = true;
+      }
+
+      const seats = tableOccupancy[tableNumber - 1];
+      let msg = `${name}, della filiale/ufficio ${office}, il tuo tavolo è: Tavolo ${tableNumber}.`;
+
+      if (seats === SEATS_PER_TABLE) msg += ` Il tavolo ${tableNumber} è pronto per festeggiare!`;
+
+      messageDiv.textContent = msg;
+    });
+  });
+</script>
+
+</body>
+</html>
