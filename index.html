@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evento BCC - Prenotazione Tavolo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      background: white;
+      padding: 24px 28px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 480px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-top: 0;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    #assignBtn {
+      width: 100%;
+      padding: 10px 0;
+      font-size: 15px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background-color: #006699;
+      color: white;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    #assignBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 14px;
+      font-size: 14px;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    .tables-box {
+      margin-top: 18px;
+      padding-top: 10px;
+      border-top: 1px solid #ddd;
+      font-size: 13px;
+    }
+
+    .tables-box h2 {
+      font-size: 14px;
+      margin: 0 0 6px 0;
+      text-align: center;
+    }
+
+    .table-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Evento BCC - Prenotazione tavolo</h1>
+
+    <div class="field">
+      <label for="nameInput">Nome</label>
+      <input type="text" id="nameInput" required />
+    </div>
+
+    <div class="field">
+      <label for="officeInput">Ufficio / Filiale</label>
+      <input type="text" id="officeInput" required />
+    </div>
+
+    <button id="assignBtn" type="button">Assegna tavolo (random)</button>
+
+    <div class="result" id="result"></div>
+
+    <div class="tables-box">
+      <h2>Stato tavoli (8 posti ciascuno)</h2>
+      <div id="tablesStatus" class="table-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const TABLE_COUNT = 10;      // 10 tavoli
+    const TABLE_CAPACITY = 8;    // 8 posti per tavolo
+
+    const nameInput = document.getElementById("nameInput");
+    const officeInput = document.getElementById("officeInput");
+    const assignBtn = document.getElementById("assignBtn");
+    const result = document.getElementById("result");
+    const tablesStatus = document.getElementById("tablesStatus");
+
+    const tables = Array.from({ length: TABLE_COUNT }, (_, i) => ({
+      id: i + 1,
+      used: 0,
+    }));
+
+    function renderTables() {
+      tablesStatus.innerHTML = tables
+        .map(t => `Tavolo ${t.id}: ${t.used}/${TABLE_CAPACITY} posti`)
+        .join("<br>");
+    }
+
+    function checkAllFull() {
+      return tables.every(t => t.used >= TABLE_CAPACITY);
+    }
+
+    assignBtn.addEventListener("click", () => {
+      const name = nameInput.value.trim();
+      const office = officeInput.value.trim();
+
+      if (!name || !office) {
+        result.textContent = "Inserisci prima Nome e Ufficio/Filiale.";
+        return;
+      }
+
+      if (checkAllFull()) {
+        result.textContent = "Tutti i tavoli sono pieni (80 posti).";
+        assignBtn.disabled = true;
+        return;
+      }
+
+      const availableTables = tables.filter(t => t.used < TABLE_CAPACITY);
+      const randomIndex = Math.floor(Math.random() * availableTables.length);
+      const chosenTable = availableTables[randomIndex];
+
+      chosenTable.used += 1;
+
+      renderTables();
+
+      result.textContent = `Hai assegnato ${name} (${office}) al Tavolo ${chosenTable.id}. Posti al tavolo: ${chosenTable.used}/${TABLE_CAPACITY}.`;
+
+      nameInput.value = "";
+      officeInput.value = "";
+      nameInput.focus();
+    });
+
+    renderTables();
+  </script>
+</body>
+</html>
