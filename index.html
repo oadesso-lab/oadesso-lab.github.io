@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evento BCC</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 40px; }
+    .counter { font-size: 80px; margin: 20px 0; }
+    button { padding: 12px 25px; font-size: 20px; margin: 10px; cursor: pointer; border: none; border-radius: 10px; }
+    #plusBtn { background-color: #1b5e20; color: white; }
+    #minusBtn { background-color: #1565c0; color: white; }
+    #resetBtn { background-color: #c62828; color: white; }
+  </style>
+</head>
+<body>
+  <h1>Evento BCC – Contatore</h1>
+
+  <div class="counter" id="counter">0</div>
+
+  <button id="plusBtn">+1</button>
+  <button id="minusBtn">-1</button>
+  <button id="resetBtn">Azzera</button>
+
+  <script>
+    let count = parseInt(localStorage.getItem("counterBCC")) || 0;
+
+    const counter = document.getElementById("counter");
+    const plusBtn = document.getElementById("plusBtn");
+    const minusBtn = document.getElementById("minusBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    counter.textContent = count;
+
+    plusBtn.addEventListener("click", () => {
+      count++;
+      counter.textContent = count;
+      localStorage.setItem("counterBCC", count);
+    });
+
+    minusBtn.addEventListener("click", () => {
+      if (count > 0) {
+        count--;
+        counter.textContent = count;
+        localStorage.setItem("counterBCC", count);
+      }
+    });
+
+    resetBtn.addEventListener("click", () => {
+      count = 0;
+      counter.textContent = count;
+      localStorage.setItem("counterBCC", count);
+    });
+  </script>
+</body>
+</html>
