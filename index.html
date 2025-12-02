@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evento BCC - Prenotazione Tavoli</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      background-color: #f2f2f2;
+    }
+
+    .container {
+      background: white;
+      margin-top: 40px;
+      padding: 24px 28px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 480px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-top: 0;
+      margin-bottom: 20px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    #assignBtn {
+      width: 100%;
+      padding: 12px 0;
+      font-size: 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background-color: #006699;
+      color: white;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    #assignBtn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 18px;
+      font-size: 16px;
+      text-align: center;
+      min-height: 24px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Evento BCC - Prenotazione Tavoli</h1>
+
+    <div class="field">
+      <label for="nameInput">Nome</label>
+      <input type="text" id="nameInput" required />
+    </div>
+
+    <div class="field">
+      <label for="officeInput">Ufficio / Filiale</label>
+      <input type="text" id="officeInput" required />
+    </div>
+
+    <button id="assignBtn" type="button">Assegna tavolo (random)</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    const TABLE_COUNT = 10;
+    const TABLE_CAPACITY = 8;
+
+    const nameInput = document.getElementById("nameInput");
+    const officeInput = document.getElementById("officeInput");
+    const assignBtn = document.getElementById("assignBtn");
+    const result = document.getElementById("result");
+
+    const tables = Array.from({ length: TABLE_COUNT }, (_, i) => ({
+      id: i + 1,
+      used: 0,
+    }));
+
+    function allFull() {
+      return tables.every((t) => t.used >= TABLE_CAPACITY);
+    }
+
+    assignBtn.addEventListener("click", () => {
+      const name = nameInput.value.trim();
+      const office = officeInput.value.trim();
+
+      if (!name || !office) {
+        result.textContent = "Inserisci prima Nome e Ufficio/Filiale.";
+        return;
+      }
+
+      if (allFull()) {
+        result.textContent = "Tutti i tavoli sono pieni (80 posti totali).";
+        assignBtn.disabled = true;
+        return;
+      }
+
+      const available = tables.filter((t) => t.used < TABLE_CAPACITY);
+      const randomIndex = Math.floor(Math.random() * available.length);
+      const chosen = available[randomIndex];
+
+      chosen.used++;
+
+      result.textContent = `Benvenuto ${name} (${office}), il tuo tavolo è il n. ${chosen.id}.`;
+
+      nameInput.value = "";
+      officeInput.value = "";
+      nameInput.focus();
+    });
+  </script>
+</body>
+</html>
