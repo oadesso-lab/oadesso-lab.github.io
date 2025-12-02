@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evento BCC - Prenotazione Tavoli</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #e0f4ff 0, #f2f2f2 55%, #e8f5e9 100%);
+    }
+
+    .container {
+      background: white;
+      margin-top: 40px;
+      padding: 24px 28px 32px;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+      max-width: 520px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo {
+      display: block;
+      max-width: 260px;
+      margin: 0 auto 12px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0 0 16px 0;
+      text-align: center;
+      font-weight: bold;
+      color: #004f71;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    #assignBtn {
+      width: 100%;
+      padding: 12px 0;
+      font-size: 16px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(90deg, #009739, #006699);
+      color: white;
+      font-weight: bold;
+      margin-top: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    #assignBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 18px;
+      font-size: 18px;
+      text-align: center;
+      min-height: 40px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: #004f71;
+    }
+
+    .result .welcome {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+
+    .result .table-label {
+      display: block;
+      font-size: 17px;
+      margin-top: 4px;
+    }
+
+    .result .table-number {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 36px;
+      font-weight: 800;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: linear-gradient(120deg, #009739, #006699);
+      color: white;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+    }
+
+    /* Confetti */
+    #confetti-container {
+      pointer-events: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 999;
+    }
+
+    .confetto {
+      position: absolute;
+      width: 8px;
+      height: 14px;
+      background-color: #009739;
+      opacity: 0.9;
+      transform: rotate(15deg);
+      animation: fall 1.4s linear forwards;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translate3d(0, -100px, 0) rotateZ(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate3d(0, 120vh, 0) rotateZ(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="confetti-container"></div>
+
+  <div class="container">
+    <img src="logo-bcc-magna-grecia.png" alt="BCC Magna Grecia" class="logo" />
+
+    <h1>Benvenuto all'evento BCC Magna Grecia</h1>
+
+    <div class="result" id="result"></div>
+
+    <div class="field">
+      <label for="nameInput">Nome</label>
+      <input type="text" id="nameInput" required />
+    </div>
+
+    <div class="field">
+      <label for="officeInput">Ufficio / Filiale</label>
+      <input type="text" id="officeInput" required />
+    </div>
+
+    <button id="assignBtn" type="button">Scopri il tuo tavolo</button>
+
+    <audio id="bellSound" src="campane.mp3" preload="auto"></audio>
+  </div>
+
+  <script>
+    const TABLE_COUNT = 10;
+    const TABLE_CAPACITY = 8;
+
+    const nameInput = document.getElementById("nameInput");
+    const officeInput = document.getElementById("officeInput");
+    const assignBtn = document.getElementById("assignBtn");
+    const result = document.getElementById("result");
+    const bellSound = document.getElementById("bellSound");
+    const confettiContainer = document.getElementById("confetti-container");
+
+    const tables = Array.from({ length: TABLE_COUNT }, (_, i) => ({
+      id: i + 1,
+      used: 0,
+    }));
+
+    function allFull() {
+      return tables.every((t) => t.used >= TABLE_CAPACITY);
+    }
+
+    function playBell() {
+      if (!bellSound) return;
+      try {
+        bellSound.currentTime = 0;
+        bellSound.play();
+      } catch (e) {
+        // in alcuni browser l'audio parte solo dopo un'interazione, ignoriamo eventuali errori
+      }
+    }
+
+    function launchConfetti() {
+      const colors = ["#009739", "#006699", "#ffca28", "#ef5350"];
+      const pieces = 80;
+
+      for (let i = 0; i < pieces; i++) {
+        const confetto = document.createElement("div");
+        confetto.classList.add("confetto");
+        const left = Math.random() * 100;
+        const delay = Math.random() * 0.4;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+
+        confetto.style.left = left + "vw";
+        confetto.style.backgroundColor = color;
+        confetto.style.animationDelay = delay + "s";
+
+        confettiContainer.appendChild(confetto);
+
+        setTimeout(() => {
+          confetto.remove();
+        }, 1700);
+      }
+    }
+
+    assignBtn.addEventListener("click", () => {
+      const name = nameInput.value.trim();
+      const office = officeInput.value.trim();
+
+      if (!name || !office) {
+        result.textContent = "Inserisci prima Nome e Ufficio/Filiale.";
+        return;
+      }
+
+      if (allFull()) {
+        result.textContent = "Tutti i tavoli sono pieni (80 posti totali).";
+        assignBtn.disabled = true;
+        return;
+      }
+
+      const available = tables.filter((t) => t.used < TABLE_CAPACITY);
+      const randomIndex = Math.floor(Math.random() * available.length);
+      const chosen = available[randomIndex];
+
+      chosen.used++;
+
+      // Messaggio formattato
+      result.innerHTML = `
+        <span class="welcome">Benvenuto <strong>${name}</strong> (${office})</span>
+        <span class="table-label">Il tuo tavolo è il</span><br>
+        <span class="table-number">${chosen.id}</span>
+      `;
+
+      playBell();
+      launchConfetti();
+
+      nameInput.value = "";
+      officeInput.value = "";
+      nameInput.focus();
+    });
+  </script>
+</body>
+</html>
