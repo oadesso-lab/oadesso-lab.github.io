@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evento BCC - Stelle Oro - Natale (Realtime)</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: radial-gradient(circle at top, #e0f4ff, #f2f2f2 55%, #e8f5e9);
+  display:flex;
+  justify-content:center;
+  padding-top:40px;
+}
+
+/* CARD CON BORDO ORO */
+.container {
+  background:white;
+  padding:30px;
+  border-radius:20px;
+  border:4px solid gold;
+  box-shadow:0 0 25px rgba(255,215,0,0.6);
+  width:520px;
+  max-width:95vw;
+}
+
+.logo {
+  display:block;
+  max-width:260px;
+  margin:0 auto 12px;
+}
+
+h1 {
+  text-align:center;
+  color:#004f71;
+  margin-bottom:20px;
+}
+
+/* Sezione prenotazione (ospiti) */
+#bookingSection {
+  transition:opacity 0.3s ease;
+}
+
+.field { margin-bottom:14px; }
+label { font-weight:600; margin-bottom:4px; display:block; }
+
+input[type=text] {
+  width:100%;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+#assignBtn {
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:999px;
+  background:linear-gradient(90deg,#009739,#006699);
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* RISULTATO PER L’OSPITE */
+.result {
+  margin-top:18px;
+  text-align:center;
+  font-size:18px;
+  color:#004f71;
+}
+.result .welcome { font-size:18px; display:block; }
+.result .table-label { margin-top:4px; display:block; }
+
+.result .table-number {
+  font-size:40px;
+  background:linear-gradient(120deg,#009739,#006699);
+  color:white;
+  padding:10px 22px;
+  border-radius:999px;
+  display:inline-block;
+  margin-top:6px;
+  position:relative;
+  z-index:2;
+}
+
+/* GLOW DIETRO NUMERO */
+.result .table-number::before {
+  content:"";
+  position:absolute;
+  top:-12px; left:-12px; right:-12px; bottom:-12px;
+  background: radial-gradient(circle, rgba(255,223,0,0.55), rgba(255,223,0,0));
+  border-radius:50%;
+  filter: blur(12px);
+  animation: glowPulse 2.4s infinite ease-in-out;
+  z-index:-1;
+}
+
+@keyframes glowPulse {
+  0% { opacity:0.3; transform:scale(0.9); }
+  50% { opacity:1; transform:scale(1.15); }
+  100% { opacity:0.3; transform:scale(0.9); }
+}
+
+/* NEVE A STELLA ORO (rimane) */
+#snow-container {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:999;
+}
+
+.snowflake {
+  position:absolute;
+  font-size:38px;
+  color:#FFD700;
+  text-shadow:
+     0 0 12px #FFD700,
+     0 0 26px #FFD700,
+     0 0 40px rgba(255,215,0,0.9),
+     0 0 55px rgba(255,215,0,0.9);
+  animation:snowFall 10s linear forwards;
+  opacity:0.98;
+}
+
+@keyframes snowFall {
+  0% { transform: translateY(-150px) rotate(0deg) scale(1); opacity:1; }
+  100% { transform: translateY(130vh) rotate(360deg) scale(1.6); opacity:0; }
+}
+
+/* DASHBOARD ORGANIZZATORE (NATALIZIA, NASCOSTA DI DEFAULT) */
+.dashboard {
+  margin-top:28px;
+  padding-top:18px;
+  border-top:2px dashed #ffd700;
+  display:none; /* nascosta all'avvio */
+}
+
+/* Banner natalizio emozionale in alto alla dashboard */
+.dashboard-banner {
+  background: linear-gradient(90deg, #0b6623, #b22222);
+  background-size: 200% 100%;
+  border-radius: 14px;
+  padding:12px 16px;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin-bottom:10px;
+  animation: xmasGlow 8s ease-in-out infinite;
+}
+
+.dashboard-banner-title {
+  font-weight:bold;
+  font-size:16px;
+}
+
+.dashboard-banner-sub {
+  font-size:13px;
+  opacity:0.95;
+}
+
+.dashboard-banner-quote {
+  font-size:12px;
+  font-style:italic;
+  opacity:0.9;
+  margin-top:4px;
+}
+
+.dashboard-banner-quote span {
+  font-style:normal;
+  font-size:11px;
+  opacity:0.9;
+}
+
+@keyframes xmasGlow {
+  0% { box-shadow:0 0 6px rgba(255,215,0,0.4); background-position:0% 0; }
+  50% { box-shadow:0 0 18px rgba(255,215,0,0.9); background-position:100% 0; }
+  100% { box-shadow:0 0 6px rgba(255,215,0,0.4); background-position:0% 0; }
+}
+
+.dashboard-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.dashboard h2 {
+  font-size:20px;
+  margin:0;
+  color:#004f71;
+  text-align:left;
+}
+
+.reset-btn {
+  padding:4px 8px;
+  font-size:12px;
+  border-radius:999px;
+  border:none;
+  background:#b22222;
+  color:white;
+  cursor:pointer;
+}
+
+.dashboard-summary {
+  font-size:14px;
+  margin:10px 0 12px;
+}
+
+.dashboard-summary span {
+  font-weight:bold;
+}
+
+/* contatori animati */
+.counter {
+  display:inline-block;
+  min-width:30px;
+  text-align:right;
+}
+
+/* griglia tavoli */
+.tables-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap:10px;
+}
+
+.table-card {
+  border:1px solid #ddd;
+  border-radius:10px;
+  padding:8px 10px;
+  font-size:14px;
+  background:#fafafa;
+  position:relative;
+  overflow:hidden;
+}
+
+/* piccole lucine in alto nella card */
+.table-card::before {
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:4px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ffd700 0 8px,
+    #ff0000 8px 16px,
+    #00b300 16px 24px
+  );
+  opacity:0.8;
+}
+
+.table-title {
+  font-weight:bold;
+  margin:6px 0 4px;
+  color:#004f71;
+}
+
+.table-info {
+  margin-bottom:6px;
+}
+
+.progress-bar {
+  width:100%;
+  height:8px;
+  border-radius:999px;
+  background:#eee;
+  overflow:hidden;
+  margin-bottom:6px;
+}
+
+.progress-fill {
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#009739,#006699);
+  transition:width 0.25s ease;
+}
+
+/* elenco persone al tavolo */
+.people-list {
+  margin:4px 0 6px;
+  padding-left:16px;
+  font-size:12px;
+  max-height:80px;
+  overflow:auto;
+}
+
+.people-list li {
+  margin-bottom:2px;
+}
+
+.people-empty {
+  font-size:12px;
+  color:#777;
+  margin-bottom:6px;
+}
+
+.minus-btn {
+  width:100%;
+  padding:4px 6px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  font-size:12px;
+  background:#f44336;
+  color:white;
+}
+
+.minus-btn:disabled {
+  opacity:0.45;
+  cursor:default;
+}
+
+/* Pulsante per aprire area organizzatori */
+.admin-btn {
+  position:fixed;
+  right:10px;
+  bottom:10px;
+  padding:6px 10px;
+  font-size:11px;
+  border-radius:999px;
+  border:none;
+  background:#b22222;
+  color:white;
+  opacity:0.65;
+  z-index:1000;
+}
+</style>
+</head>
+
+<body>
+
+<div id="snow-container"></div>
+
+<div class="container">
+  <img src="logo.jpg" class="logo" alt="Logo BCC Magna Grecia">
+  <h1>Benvenuto all'evento BCC Magna Grecia</h1>
+
+  <!-- Sezione prenotazione visibile agli ospiti -->
+  <div id="bookingSection">
+    <div id="result" class="result"></div>
+
+    <div class="field">
+      <label>Nome</label>
+      <input id="nameInput" type="text">
+    </div>
+
+    <div class="field">
+      <label>Ufficio / Filiale</label>
+      <input id="officeInput" type="text">
+    </div>
+
+    <button id="assignBtn">Scopri il tuo tavolo</button>
+  </div>
+
+  <audio id="bellSound" src="campane.mp3" preload="auto"></audio>
+
+  <!-- DASHBOARD ORGANIZZATORE (inizialmente nascosta) -->
+  <div class="dashboard" id="dashboard">
+    <div class="dashboard-banner">
+      <div class="dashboard-banner-title">
+        Serata di Natale – insieme come una grande squadra
+      </div>
+      <div class="dashboard-banner-sub">
+        L'unione è la nostra forza: ogni posto a tavola è un posto per condividere,
+        crescere e sentirci parte della stessa famiglia.
+      </div>
+      <div class="dashboard-banner-quote">
+        “Da soli possiamo fare così poco; insieme possiamo fare così tanto.”
+        <span>– Helen Keller</span>
+      </div>
+    </div>
+
+    <div class="dashboard-header">
+      <h2>Dashboard tavoli</h2>
+      <button id="resetBtn" class="reset-btn">Azzera tavoli</button>
+    </div>
+    <div class="dashboard-summary">
+      Posti totali: <span class="counter" id="totalSeats"></span> —
+      Occupati: <span class="counter" id="occupiedSeats"></span> —
+      Liberi: <span class="counter" id="freeSeats"></span>
+    </div>
+    <div id="tablesGrid" class="tables-grid"></div>
+  </div>
+</div>
+
+<!-- piccolo bottone fisso per area organizzatori -->
+<button id="showAdminBtn" class="admin-btn">Area organizzatori</button>
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+// === CONFIGURAZIONE FIREBASE (tua) ===
+const firebaseConfig = {
+  apiKey: "AIzaSyA1EWKdl7TXVXNJpxAR5Uj1e5h5vPgxtFk",
+  authDomain: "evento-bcc-magna-grecia.firebaseapp.com",
+  projectId: "evento-bcc-magna-grecia",
+  storageBucket: "evento-bcc-magna-grecia.firebasestorage.app",
+  messagingSenderId: "767111568452",
+  appId: "1:767111568452:web:aa7cfd66ae1995c5273011"
+};
+
+// Inizializza Firebase e Firestore
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// === LOGICA APP ===
+const TABLE_COUNT = 30;
+const TABLE_CAPACITY = 8;
+const TOTAL_SEATS = TABLE_COUNT * TABLE_CAPACITY;
+
+// struttura locale derivata dal DB
+let tables = [];
+let lastSnapshotDocs = [];
+let lastAssignedTable = null; // ultimo tavolo assegnato globalmente
+
+const result = document.getElementById("result");
+const nameInput = document.getElementById("nameInput");
+const officeInput = document.getElementById("officeInput");
+const bellSound = document.getElementById("bellSound");
+const snowContainer = document.getElementById("snow-container");
+const bookingSection = document.getElementById("bookingSection");
+
+// elementi dashboard
+const totalSeatsEl = document.getElementById("totalSeats");
+const occupiedSeatsEl = document.getElementById("occupiedSeats");
+const freeSeatsEl = document.getElementById("freeSeats");
+const tablesGrid = document.getElementById("tablesGrid");
+const resetBtn = document.getElementById("resetBtn");
+const dashboardEl = document.getElementById("dashboard");
+
+totalSeatsEl.textContent = TOTAL_SEATS;
+
+// valori precedenti per animazione contatori
+let prevOccupied = 0;
+let prevFree = TOTAL_SEATS;
+
+// funzione per animare un numero da from a to
+function animateCounter(el, from, to, duration = 400) {
+  if (from === to) {
+    el.textContent = to;
+    return;
+  }
+  const start = performance.now();
+  const direction = to > from ? 1 : -1;
+  const diff = Math.abs(to - from);
+
+  function step(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const current = from + direction * Math.round(diff * progress);
+    el.textContent = current;
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+function playBell(){
+  try {
+    bellSound.volume=1;
+    bellSound.currentTime=0;
+    bellSound.play();
+  } catch(e){}
+}
+
+function launchSnow(){
+  for(let i=0;i<60;i++){
+    const s=document.createElement("div");
+    s.classList.add("snowflake");
+    s.textContent = "✧";   // STELLA ORO
+    s.style.left = Math.random()*100 + "vw";
+    s.style.animationDelay = (Math.random()*3) + "s";
+    s.style.fontSize = (34 + Math.random()*20) + "px";
+    snowContainer.appendChild(s);
+    setTimeout(()=>s.remove(),11000);
+  }
+}
+
+// ricostruisce la struttura tables a partire dalle prenotazioni del DB
+function rebuildTablesFromSnapshot(snapshot) {
+  tables = Array.from(
+    {length:TABLE_COUNT},
+    (_,i)=>({id:i+1, bookings:[]})
+  );
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const tableId = data.table;
+    if (typeof tableId === "number" &&
+        tableId >= 1 &&
+        tableId <= TABLE_COUNT) {
+      const t = tables[tableId - 1];
+      t.bookings.push({
+        id: doc.id,
+        name: data.name || "",
+        office: data.office || "",
+        createdAt: data.createdAt || null
+      });
+    }
+  });
+
+  // aggiorna l'ultimo tavolo assegnato globalmente (ultima prenotazione nel tempo)
+  if (snapshot.docs.length > 0) {
+    const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+    const lastData = lastDoc.data();
+    if (lastData && typeof lastData.table === "number") {
+      lastAssignedTable = lastData.table;
+    }
+  } else {
+    lastAssignedTable = null;
+  }
+}
+
+// aggiorna dashboard (riempimento tavoli + contatori + persone)
+function renderDashboard(){
+  const occupied = tables.reduce((sum,t)=>sum + t.bookings.length, 0);
+  const free = TOTAL_SEATS - occupied;
+
+  // contatori animati
+  animateCounter(occupiedSeatsEl, prevOccupied, occupied);
+  animateCounter(freeSeatsEl, prevFree, free);
+  totalSeatsEl.textContent = TOTAL_SEATS;
+
+  prevOccupied = occupied;
+  prevFree = free;
+
+  tablesGrid.innerHTML = "";
+  tables.forEach(t => {
+    const used = t.bookings.length;
+    const perc = (used / TABLE_CAPACITY) * 100;
+
+    const peopleLines = t.bookings
+      .map(p => `<li>${p.name} (${p.office})</li>`)
+      .join("");
+
+    const peopleHtml = t.bookings.length
+      ? `<ul class="people-list">${peopleLines}</ul>`
+      : `<div class="people-empty">Nessuno ancora.</div>`;
+
+    const card = document.createElement("div");
+    card.className = "table-card";
+    card.innerHTML = `
+      <div class="table-title">Tavolo ${t.id}</div>
+      <div class="table-info">${used} / ${TABLE_CAPACITY} posti</div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${perc}%;"></div>
+      </div>
+      ${peopleHtml}
+      <button class="minus-btn" data-table-id="${t.id}" ${used === 0 ? "disabled" : ""}>-1 posto</button>
+    `;
+    tablesGrid.appendChild(card);
+  });
+}
+
+// controlla se tutti i tavoli sono pieni
+function allFull(){
+  return tables.every(t => t.bookings.length >= TABLE_CAPACITY);
+}
+
+// === LISTENER IN TEMPO REALE SULLE PRENOTAZIONI ===
+db.collection("bookings")
+  .orderBy("createdAt", "asc")
+  .onSnapshot(snapshot => {
+    lastSnapshotDocs = snapshot.docs; // per reset
+    rebuildTablesFromSnapshot(snapshot);
+    renderDashboard();
+  });
+
+// click -1 posto (event delegation sulla griglia)
+tablesGrid.addEventListener("click", (e) => {
+  if (!e.target.classList.contains("minus-btn")) return;
+
+  const id = parseInt(e.target.getAttribute("data-table-id"), 10);
+  const table = tables.find(t => t.id === id);
+  if (!table) return;
+
+  if (table.bookings.length > 0) {
+    // prendo l'ultima prenotazione di quel tavolo
+    const lastBooking = table.bookings[table.bookings.length - 1];
+    if (lastBooking && lastBooking.id) {
+      db.collection("bookings").doc(lastBooking.id).delete().catch(console.error);
+    }
+  }
+});
+
+document.getElementById("assignBtn").onclick = async ()=>{
+  const name=nameInput.value.trim();
+  const office=officeInput.value.trim();
+
+  if(!name || !office){
+    result.textContent="Inserisci Nome e Ufficio/Filiale.";
+    return;
+  }
+
+  if(allFull()){
+    result.textContent = "Tutti i tavoli sono pieni (" + TOTAL_SEATS + " posti).";
+    return;
+  }
+
+  // scegliamo un tavolo con posti liberi sulla base dello stato corrente
+  let availableTables = tables.filter(t => t.bookings.length < TABLE_CAPACITY);
+
+  // EVITA DI ASSEGNARE LO STESSO TAVOLO DELLA PRENOTAZIONE PRECEDENTE
+  if (lastAssignedTable !== null) {
+    const filtered = availableTables.filter(t => t.id !== lastAssignedTable);
+    if (filtered.length > 0) {
+      availableTables = filtered;
+    }
+    // se filtered è vuoto, significa che è rimasto libero solo quel tavolo,
+    // in quel caso usiamo comunque availableTables non filtrato.
+  }
+
+  const chosen = availableTables[Math.floor(Math.random()*availableTables.length)];
+
+  try {
+    await db.collection("bookings").add({
+      name,
+      office,
+      table: chosen.id,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    result.innerHTML =
+      "<span class='welcome'><strong>"+name+
+      "</strong> ("+office+")</span>" +
+      "<span class='table-label'>Il tuo tavolo è il</span>" +
+      "<span class='table-number'>"+chosen.id+"</span>";
+
+    playBell();
+    launchSnow();
+
+    nameInput.value="";
+    officeInput.value="";
+    nameInput.focus();
+  } catch (err) {
+    console.error(err);
+    result.textContent = "Si è verificato un errore, riprova tra qualche secondo.";
+  }
+};
+
+/* Bottone AZZERA TAVOLI */
+resetBtn.addEventListener("click", async () => {
+  if (!confirm("Sei sicura di voler azzerare tutti i tavoli e le prenotazioni?")) return;
+  try {
+    const batchSize = lastSnapshotDocs.length;
+    for (let i = 0; i < batchSize; i++) {
+      const docRef = lastSnapshotDocs[i].ref;
+      await docRef.delete();
+    }
+    result.textContent = "";
+    prevOccupied = 0;
+    prevFree = TOTAL_SEATS;
+    lastAssignedTable = null;
+  } catch (err) {
+    console.error(err);
+    alert("Errore nell'azzeramento dei tavoli. Riprova.");
+  }
+});
+
+/* Pulsante Area organizzatori con codice 1109
+   - mostra/nasconde dashboard
+   - nasconde/mostra la sezione prenotazione */
+document.getElementById("showAdminBtn").addEventListener("click", () => {
+  const code = prompt("Codice organizzatore:");
+  if (code === "1109") {
+    const isHidden = dashboardEl.style.display === "none" || dashboardEl.style.display === "";
+    if (isHidden) {
+      dashboardEl.style.display = "block";
+      bookingSection.style.display = "none";
+    } else {
+      dashboardEl.style.display = "none";
+      bookingSection.style.display = "block";
+    }
+  } else if (code !== null) {
+    alert("Codice errato");
+  }
+});
+</script>
+
+</body>
+</html>
