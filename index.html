@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Evento BCC - Realtime</title>
+
+<style>
+:root{
+  /* Tema ispirato alla grafica allegata (verde profondo + oro) */
+  --bg-green-1:#0b3f2f;
+  --bg-green-2:#0a4a33;
+  --bg-green-3:#073626;
+
+  --bcc-blue:#004f71;
+  --bcc-blue-2:#0a6b93;
+  --bcc-green:#0aa35a;
+  --bcc-gold:#C9A227;
+  --bcc-gold-2:#e8c86a;
+  --danger:#b22222;
+
+  --card:#0f2f24; /* usato per dettagli */
+}
+
+body{
+  font-family: Arial, sans-serif;
+  /* Fondo verde profondo, con “sparkle” oro tipo cartolina */
+  background:
+    radial-gradient( circle at 20% 18%, rgba(201,162,39,.18), rgba(0,0,0,0) 42%),
+    radial-gradient( circle at 80% 22%, rgba(201,162,39,.14), rgba(0,0,0,0) 46%),
+    radial-gradient( circle at 50% 75%, rgba(201,162,39,.10), rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, var(--bg-green-2), var(--bg-green-3));
+  display:flex;
+  justify-content:center;
+  padding:40px 12px 60px;
+}
+
+/* base container */
+.container{
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding:30px;
+  border-radius:22px;
+  border:3px solid rgba(201,162,39,0.95);
+  box-shadow:
+    0 18px 50px rgba(0,0,0,0.30),
+    0 0 26px rgba(201,162,39,0.32);
+  width:520px;
+  max-width:95vw;
+}
+
+
+.container::before{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius:24px;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(201,162,39,.55) 0 1px, rgba(0,0,0,0) 2px),
+    radial-gradient(circle at 28% 28%, rgba(232,200,106,.55) 0 1px, rgba(0,0,0,0) 2px),
+    radial-gradient(circle at 72% 24%, rgba(201,162,39,.55) 0 1px, rgba(0,0,0,0) 2px),
+    radial-gradient(circle at 84% 32%, rgba(232,200,106,.55) 0 1px, rgba(0,0,0,0) 2px),
+    radial-gradient(circle at 62% 78%, rgba(201,162,39,.45) 0 1px, rgba(0,0,0,0) 2px),
+    radial-gradient(circle at 22% 78%, rgba(232,200,106,.35) 0 1px, rgba(0,0,0,0) 2px);
+  opacity:.55;
+  mix-blend-mode:multiply;
+}
+.container{
+  position:relative;
+  overflow:hidden;
+}
+
+
+/* when dashboard is shown on a horizontal screen (TV/PC) */
+body.dashboard-wide .container{
+  width:min(1320px, 98vw);
+  padding:22px;
+}
+
+/* logo/title */
+.logo{ display:block; max-width:260px; margin:0 auto 12px; }
+h1{ text-align:center; color:var(--bcc-blue); margin-bottom:18px; font-size:20px; }
+
+/* form */
+.field{ margin-bottom:14px; }
+label{ font-weight:600; margin-bottom:4px; display:block; }
+input[type=text]{ width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; }
+
+#assignBtn{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--bcc-green),var(--bcc-blue-2));
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+#assignBtn:disabled{ opacity:.6; cursor:default; }
+
+/* result */
+.result{ margin-top:18px; text-align:center; font-size:18px; color:var(--bcc-blue); }
+.result .welcome{ font-size:18px; display:block; }
+.result .table-label{ margin-top:4px; display:block; }
+.result .motto{ margin-top:10px; font-size:13px; color:#2b2b2b; opacity:.92; font-style:italic; }
+
+.result .table-number{
+  font-size:44px;
+  background:linear-gradient(120deg,var(--bcc-green),var(--bcc-blue-2));
+  color:white;
+  padding:10px 22px;
+  border-radius:999px;
+  display:inline-block;
+  margin-top:6px;
+  position:relative;
+  z-index:2;
+  min-width:88px;
+}
+.result .table-number::before{
+  content:"";
+  position:absolute;
+  top:-12px; left:-12px; right:-12px; bottom:-12px;
+  background: radial-gradient(circle, rgba(201,162,39,0.55), rgba(201,162,39,0));
+  border-radius:50%;
+  filter: blur(12px);
+  animation: glowPulse 2.4s infinite ease-in-out;
+  z-index:-1;
+}
+@keyframes glowPulse{
+  0%{ opacity:.35; transform:scale(.92); }
+  50%{ opacity:1; transform:scale(1.15); }
+  100%{ opacity:.35; transform:scale(.92); }
+}
+
+/* golden stars */
+#snow-container{
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none;
+  z-index:999;
+}
+.snowflake{
+  position:absolute;
+  font-size:38px;
+  color:var(--bcc-gold);
+  text-shadow:
+    0 0 12px var(--bcc-gold),
+    0 0 26px var(--bcc-gold),
+    0 0 40px rgba(201,162,39,0.9),
+    0 0 55px rgba(201,162,39,0.9);
+  animation:snowFall 10s linear forwards;
+  opacity:.98;
+}
+@keyframes snowFall{
+  0%{ transform:translateY(-150px) rotate(0deg) scale(1); opacity:1; }
+  100%{ transform:translateY(130vh) rotate(360deg) scale(1.6); opacity:0; }
+}
+
+/* dashboard */
+.dashboard{
+  margin-top:28px;
+  padding-top:18px;
+  border-top:2px dashed var(--bcc-gold);
+  display:none;
+}
+body.dashboard-wide .dashboard{
+  margin-top:16px;
+  padding-top:12px;
+}
+
+.dashboard-banner{
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 55% 55%, rgba(232,200,106,.22), rgba(0,0,0,0) 55%),
+    radial-gradient(circle at 30% 35%, rgba(201,162,39,.14), rgba(0,0,0,0) 50%),
+    linear-gradient(180deg, rgba(7,54,38,.92), rgba(10,74,51,.92));
+  border-radius:16px;
+  padding:14px 16px;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  margin-bottom:10px;
+  border:1px solid rgba(201,162,39,.35);
+  box-shadow:0 10px 26px rgba(0,0,0,.22);
+  animation:xmasGlow 10s ease-in-out infinite;
+}
+.dashboard-banner::before{
+  content:"";
+  position:absolute;
+  inset:-40px;
+  background:
+    radial-gradient(circle at 42% 46%, rgba(201,162,39,.55) 0 1px, rgba(0,0,0,0) 2px),
+    radial-gradient(circle at 46% 50%, rgba(232,200,106,.45) 0 1px, rgba(0,0,0,0) 2px),
+    radial-gradient(circle at 50% 54%, rgba(201,162,39,.42) 0 1px, rgba(0,0,0,0) 2px),
+    radial-gradient(circle at 54% 58%, rgba(232,200,106,.35) 0 1px, rgba(0,0,0,0) 2px),
+    radial-gradient(circle at 58% 62%, rgba(201,162,39,.30) 0 1px, rgba(0,0,0,0) 2px);
+  opacity:.7;
+  filter: blur(.2px);
+  pointer-events:none;
+}
+.dashboard-banner::after{
+  content:"✦";
+  position:absolute;
+  top:10px; right:14px;
+  color:rgba(232,200,106,.95);
+  font-size:22px;
+  text-shadow:0 0 12px rgba(201,162,39,.55);
+  opacity:.9;
+  pointer-events:none;
+}
+@keyframes xmasGlow{
+  0%{ box-shadow:0 0 6px rgba(201,162,39,0.35); background-position:0% 0; }
+  50%{ box-shadow:0 0 18px rgba(201,162,39,0.85); background-position:100% 0; }
+  100%{ box-shadow:0 0 6px rgba(201,162,39,0.35); background-position:0% 0; }
+}
+.dashboard-banner-title{ font-weight:bold; font-size:16px; }
+.dashboard-banner-sub{ font-size:13px; opacity:.95; }
+.dashboard-banner-quote{ font-size:12px; font-style:italic; opacity:.9; margin-top:4px; }
+.dashboard-banner-quote span{ font-style:normal; font-size:11px; opacity:.9; }
+
+.dashboard-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+.dashboard h2{ font-size:20px; margin:0; color:var(--bcc-blue); }
+
+.btn-pill{
+  padding:6px 10px;
+  font-size:12px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  color:white;
+  background:linear-gradient(90deg, rgba(10,163,90,.95), rgba(0,79,113,.95));
+  box-shadow:0 6px 16px rgba(0,0,0,.18);
+}
+.btn-pill.secondary{ background:var(--danger); }
+.btn-pill.gold{ background:linear-gradient(90deg, var(--bcc-gold), var(--bcc-gold-2)); color:#1b1b1b; }
+.btn-pill:disabled{ opacity:.55; cursor:default; }
+
+/* horizontal dashboard layout */
+.dashboard-layout{ display:block; }
+body.dashboard-wide .dashboard-layout{
+  display:grid;
+  grid-template-columns: 360px 1fr;
+  gap:12px;
+  align-items:start;
+}
+
+.dashboard-summary{ font-size:14px; margin:10px 0 10px; }
+.dashboard-summary span{ font-weight:bold; }
+
+.progress-wrap{ margin:10px 0 14px; }
+.progress-top{
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  color:#333;
+  margin-bottom:6px;
+}
+.progress-bar{
+  width:100%;
+  height:10px;
+  border-radius:999px;
+  background:#eee;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,var(--bcc-green),var(--bcc-blue-2));
+  transition:width .25s ease;
+}
+
+.admin-box{
+  border:1px solid #e5e5e5;
+  border-radius:12px;
+  padding:10px;
+  background:#fff;
+}
+.admin-box h3{ margin:0 0 8px; font-size:13px; color:var(--bcc-blue); }
+.last5{ font-size:12px; margin:0; padding-left:16px; }
+.last5 li{ margin-bottom:4px; }
+
+.tables-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap:10px;
+}
+body.dashboard-wide .tables-grid{
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap:10px;
+}
+
+.table-card{
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:10px 10px 8px;
+  font-size:14px;
+  background:rgba(255,255,255,0.94);
+  position:relative;
+  overflow:hidden;
+}
+.table-card::before{
+  content:"";
+  position:absolute;
+  top:0; left:0; right:0;
+  height:4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--bcc-gold) 0 8px,
+    #ff0000 8px 16px,
+    #00b300 16px 24px
+  );
+  opacity:.75;
+}
+
+.table-title{ font-weight:bold; margin:6px 0 4px; color:var(--bcc-blue); }
+.table-info{ margin-bottom:6px; }
+
+.mini-progress{
+  width:100%;
+  height:8px;
+  border-radius:999px;
+  background:#eee;
+  overflow:hidden;
+  margin-bottom:6px;
+}
+.mini-progress > div{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,var(--bcc-green),var(--bcc-blue-2));
+  transition:width .25s ease;
+}
+
+/* status */
+.table-card.nearly-full{ border-color:#e39a2b; box-shadow:0 0 0 2px rgba(227,154,43,.15); }
+.table-card.full{ border-color:var(--danger); box-shadow:0 0 0 2px rgba(178,34,34,.15); }
+.table-card.flash-full{ animation: flashFull 1.2s ease-in-out 0s 2; }
+@keyframes flashFull{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.02); } }
+
+/* people list */
+.people-list{
+  margin:6px 0 8px;
+  padding-left:0;
+  list-style:none;
+  font-size:12px;
+  max-height:92px;
+  overflow:auto;
+}
+.people-list li{
+  margin-bottom:4px;
+  padding:4px 6px;
+  border-radius:8px;
+  border:1px solid rgba(0,0,0,.06);
+  background:white;
+}
+.people-empty{ font-size:12px; color:#777; margin:6px 0 10px; }
+
+.people-list li.tag-intollerante{ background:#c62828; color:white; border-color:rgba(255,255,255,.2); }
+.people-list li.tag-vegetariano{ background:#ffeb3b; color:#111; border-color:rgba(0,0,0,.1); }
+
+.minus-btn{
+  width:100%;
+  padding:6px 8px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  font-size:12px;
+  background:#f44336;
+  color:white;
+}
+.minus-btn:disabled{ opacity:.45; cursor:default; }
+
+.admin-btn{
+  position:fixed;
+  right:10px; bottom:10px;
+  padding:6px 10px;
+  font-size:11px;
+  border-radius:999px;
+  border:none;
+  background:var(--danger);
+  color:white;
+  opacity:.7;
+  z-index:1000;
+}
+
+/* === TV READABILITY ENHANCEMENTS === */
+body.dashboard-wide .people-list li{
+  font-size:14.5px;
+  font-weight:600;
+  letter-spacing:.2px;
+  box-shadow: inset 0 0 0 9999px rgba(255,255,255,0.02);
+}
+body.dashboard-wide .people-list li{
+  text-shadow: 0 0 1px rgba(0,0,0,.35);
+}
+body.dashboard-wide .people-list li.tag-intollerante{
+  box-shadow: 0 0 0 2px rgba(255,255,255,.15) inset;
+}
+body.dashboard-wide .people-list li.tag-vegetariano{
+  box-shadow: 0 0 0 2px rgba(0,0,0,.15) inset;
+}
+body.dashboard-wide .table-title{
+  font-size:16px;
+}
+body.dashboard-wide .table-info{
+  font-size:13px;
+}
+
+
+/* ===== LAYOUT SALA (griglia spaziata come disposizione reale) ===== */
+body.dashboard-wide #tablesGrid.sala-layout{
+  position:relative;
+  display:grid;
+  grid-template-columns: repeat(16, minmax(0, 1fr));
+  grid-auto-rows: 150px;
+  gap: 14px;
+  align-items: start;
+}
+
+/* overlay labels */
+body.dashboard-wide .sala-overlay{
+  position:relative;
+  height:0;
+  pointer-events:none;
+}
+body.dashboard-wide .sala-label{
+  position:absolute;
+  padding:6px 10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(0,0,0,.12);
+  font-weight:900;
+  color:#0b3f2f;
+  box-shadow:0 8px 18px rgba(0,0,0,.08);
+  font-size:14px;
+}
+body.dashboard-wide .sala-label.palco{ left:50%; top:8px; transform:translateX(-50%); }
+body.dashboard-wide .sala-label.ingresso{ left:50%; top:820px; transform:translateX(-50%); }
+body.dashboard-wide .sala-label.video{ left:20px; top:820px; }
+body.dashboard-wide .sala-label.photowall{ left:50%; top:760px; transform:translateX(-50%); }
+body.dashboard-wide .sala-label.letterine{ right:160px; top:760px; }
+body.dashboard-wide .sala-label.alberi{ right:20px; top:10px; }
+
+
+/* === OVERLAY VARIANTE B (operativa): INGRESSO + CORRIDOIO DX === */
+body.dashboard-wide .sala-label.ingresso{
+  left:18px;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(24,160,88,.92);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.35);
+  box-shadow:0 10px 22px rgba(0,0,0,.16);
+  font-size:15px;
+  padding:8px 12px;
+  border-radius:999px;
+}
+
+body.dashboard-wide .sala-corridor{
+  position:absolute;
+  right:18px;
+  top:120px;
+  width:150px;
+  height:760px;
+  border:2px dashed rgba(0,120,200,.65);
+  background:rgba(0,120,200,.10);
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:6px;
+  box-shadow:0 10px 22px rgba(0,0,0,.10);
+}
+body.dashboard-wide .sala-corridor .corridor-title{
+  font-weight:900;
+  letter-spacing:.5px;
+  color:#0b4c7a;
+  transform:rotate(90deg);
+  font-size:14px;
+}
+body.dashboard-wide .sala-corridor .corridor-sub{
+  font-weight:800;
+  color:#0b4c7a;
+  opacity:.85;
+  transform:rotate(90deg);
+  font-size:12px;
+}
+
+/* se schermo stretto: non tagliare lato destro */
+body.dashboard-wide .dashboard{ overflow-x:auto; }
+body.dashboard-wide #tablesGrid.sala-layout{ min-width:1200px; }
+
+
+/* Position mapping (rows/cols) */
+body.dashboard-wide #tablesGrid.sala-layout .t1{ grid-column:1 / span 2; grid-row:2; }
+body.dashboard-wide #tablesGrid.sala-layout .t2{ grid-column:1 / span 2; grid-row:4; }
+body.dashboard-wide #tablesGrid.sala-layout .t3{ grid-column:3 / span 2; grid-row:1; }
+body.dashboard-wide #tablesGrid.sala-layout .t4{ grid-column:3 / span 2; grid-row:2; }
+body.dashboard-wide #tablesGrid.sala-layout .t5{ grid-column:3 / span 2; grid-row:3; }
+body.dashboard-wide #tablesGrid.sala-layout .t6{ grid-column:3 / span 2; grid-row:4; }
+body.dashboard-wide #tablesGrid.sala-layout .t7{ grid-column:5 / span 2; grid-row:1; }
+body.dashboard-wide #tablesGrid.sala-layout .t8{ grid-column:5 / span 2; grid-row:2; }
+body.dashboard-wide #tablesGrid.sala-layout .t9{ grid-column:5 / span 2; grid-row:3; }
+body.dashboard-wide #tablesGrid.sala-layout .t10{ grid-column:5 / span 2; grid-row:4; }
+body.dashboard-wide #tablesGrid.sala-layout .t11{ grid-column:3 / span 2; grid-row:5; }
+body.dashboard-wide #tablesGrid.sala-layout .t14{ grid-column:5 / span 2; grid-row:5; }
+body.dashboard-wide #tablesGrid.sala-layout .t13{ grid-column:7 / span 2; grid-row:4; }
+
+/* CDA 12: lato sinistro vicino a 8 e 9 (spanning rows 2-3) */
+body.dashboard-wide #tablesGrid.sala-layout .t12{ grid-column:7 / span 2; grid-row:2 / span 2; }
+
+/* Right block */
+body.dashboard-wide #tablesGrid.sala-layout .t15{ grid-column:10 / span 2; grid-row:2; }
+body.dashboard-wide #tablesGrid.sala-layout .t16{ grid-column:10 / span 2; grid-row:3; }
+body.dashboard-wide #tablesGrid.sala-layout .t17{ grid-column:10 / span 2; grid-row:4; }
+
+body.dashboard-wide #tablesGrid.sala-layout .t18{ grid-column:12 / span 2; grid-row:2; }
+body.dashboard-wide #tablesGrid.sala-layout .t19{ grid-column:12 / span 2; grid-row:3; }
+body.dashboard-wide #tablesGrid.sala-layout .t20{ grid-column:12 / span 2; grid-row:4; }
+body.dashboard-wide #tablesGrid.sala-layout .t21{ grid-column:13 / span 2; grid-row:5; }
+
+body.dashboard-wide #tablesGrid.sala-layout .t22{ grid-column:15 / span 2; grid-row:2; }
+body.dashboard-wide #tablesGrid.sala-layout .t23{ grid-column:15 / span 2; grid-row:3; }
+body.dashboard-wide #tablesGrid.sala-layout .t24{ grid-column:15 / span 2; grid-row:4; }
+body.dashboard-wide #tablesGrid.sala-layout .t25{ grid-column:15 / span 2; grid-row:5; }
+
+
+/* ===== LEGGIBILITÀ NOMI (non allunga i riquadri) ===== */
+body.dashboard-wide #tablesGrid.sala-layout .table-card{
+  height: 150px;              /* fissa l'altezza (come grid-auto-rows) */
+  overflow: hidden;
+}
+body.dashboard-wide #tablesGrid.sala-layout .people-list{
+  max-height: 56px;           /* area nomi fissa */
+  overflow: hidden;
+}
+body.dashboard-wide #tablesGrid.sala-layout .people-list li{
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: clip;
+  word-break: break-word;
+  font-size: 12px;
+  line-height: 1.15;
+  padding: 5px 8px;
+}
+body.dashboard-wide #tablesGrid.sala-layout .people-more{
+  margin-top: 4px;
+  font-size: 11px;
+  color:#555;
+  font-weight: 800;
+}
+
+
+/* === ADMIN: REMOVE/ADD NAMES === */
+.people-list li{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.people-list .person-text{
+  flex:1;
+  min-width:0;
+  white-space:normal;
+  overflow:hidden;
+  text-overflow:clip;
+  word-break:break-word;
+  line-height:1.15;
+}
+.people-list .remove-person{
+  flex:0 0 auto;
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  font-size:14px;
+  line-height:1;
+  opacity:.75;
+}
+.people-list .remove-person:hover{ opacity:1; }
+
+.manual-add-panel{
+  margin-top:10px;
+  border:1px solid #e5e5e5;
+  border-radius:12px;
+  padding:10px;
+  background:#fff;
+}
+.manual-add-panel h3{ margin:0 0 8px; font-size:13px; color:var(--bcc-blue); }
+.manual-add-grid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:8px;
+}
+.manual-add-grid select,
+.manual-add-grid input{
+  width:100%;
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #d8d8d8;
+  font-size:13px;
+}
+.manual-add-actions{
+  display:flex;
+  gap:8px;
+}
+.manual-add-actions button{
+  flex:1;
+  padding:8px 10px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  font-weight:700;
+  font-size:12px;
+}
+.manual-add-actions .add-btn{
+  background:linear-gradient(90deg,var(--bcc-green),var(--bcc-blue-2));
+  color:white;
+}
+.manual-add-actions .cda-btn{
+  background:linear-gradient(90deg,var(--bcc-gold),var(--bcc-gold-2));
+  color:#1b1b1b;
+}
+
+
+/* === Layout: pannello richiudibile + zoom sala === */
+.dashboard-layout{
+  align-items:flex-start;
+}
+.dashboard-side{
+  width: 360px;
+  min-width: 320px;
+}
+.dashboard-main{
+  flex:1;
+  min-width: 720px;
+}
+body.side-collapsed .dashboard-side{
+  display:none;
+}
+body.side-collapsed .dashboard-main{
+  width:100%;
+}
+.sala-scale{
+  transform-origin: top left;
+}
+
+
+
+
+
+body.dashboard-wide .sala-label.ingresso{
+  left:50%;
+  top:auto;
+  bottom:18px;
+  transform:translateX(-50%);
+  background:rgba(24,160,88,.92);
+  color:#fff;
+  border:1px solid rgba(255,255,255,.35);
+  box-shadow:0 10px 22px rgba(0,0,0,.16);
+}
+body.dashboard-wide .sala-label.photowall{
+  bottom: 26px;
+  left: 62%;
+  transform: translateX(-50%);
+}
+body.dashboard-wide .sala-label.letterine{
+  bottom: 26px;
+  left: calc(62% + 190px); /* di fianco a PHOTO WALL, più a dx */
+  transform: translateX(-50%);
+}
+body.dashboard-wide .sala-label.video{ display:none !important; }
+body.dashboard-wide .sala-corridor{ display:none !important; }
+
+
+.plan-modal.open{ display:flex; }
+.plan-card{
+  background:#fff;
+  border-radius:18px;
+  max-width:1100px;
+  width:min(1100px, 96vw);
+  max-height:90vh;
+  overflow:hidden;
+  box-shadow:0 18px 50px rgba(0,0,0,.35);
+  border:2px solid rgba(212,175,55,.65);
+}
+.plan-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 12px;
+  background:linear-gradient(90deg, rgba(0,140,90,.10), rgba(0,120,200,.08));
+}
+.plan-head .title{
+  font-weight:900;
+  font-size:14px;
+  color:#0b4c7a;
+}
+.plan-close{
+  border:none;
+  background:#111;
+  color:#fff;
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  cursor:pointer;
+  font-size:18px;
+  line-height:1;
+}
+.plan-body{
+  padding:10px;
+  background:#fafafa;
+}
+.plan-body img{
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius:12px;
+}
+.plan-btn{
+  margin-top:10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  font-weight:900;
+  background:linear-gradient(90deg,var(--bcc-green),var(--bcc-blue-2));
+  color:#fff;
+}
+
+
+/* === OVERRIDE POSIZIONI OVERLAY (finale) === */
+body.dashboard-wide #salaOverlay .sala-label.ingresso{
+  left:50% !important;
+  top:auto !important;
+  bottom:18px !important;
+  transform:translateX(-50%) !important;
+}
+body.dashboard-wide #salaOverlay .sala-label.alberi{
+  right:10px !important;
+  top:10px !important;
+}
+body.dashboard-wide #salaOverlay .sala-label.photowall{
+  bottom:26px !important;
+  left:auto !important;
+  right:260px !important;
+  transform:none !important;
+}
+body.dashboard-wide #salaOverlay .sala-label.letterine{
+  bottom:26px !important;
+  left:auto !important;
+  right:40px !important;
+  transform:none !important;
+}
+
+
+
+body.dashboard-wide .plan-fab{ display:none; } /* in dashboard non serve */
+
+
+/* === FIX: posizioni overlay (override assoluto) === */
+#salaOverlay .sala-label.ingresso{
+  left:50% !important;
+  top:auto !important;
+  bottom:18px !important;
+  transform:translateX(-50%) !important;
+}
+#salaOverlay .sala-label.palco{
+  left:60% !important;   /* un filo più a destra */
+  top:26px !important;
+  transform:translateX(-50%) !important;
+}
+
+
+/* === FIX: overlay deve coprire tutta la sala (altezza griglia) === */
+#salaScale{ position:relative; }
+#salaOverlay{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
+
+
+/* INGRESSO in basso al centro (ancorato alla griglia) */
+#salaOverlay .sala-label.ingresso{
+  left:50% !important;
+  top:auto !important;
+  bottom:18px !important;
+  transform:translateX(-50%) !important;
+}
+
+
+
+.plan-inline-title{
+  font-weight:900;
+  font-size:13px;
+  margin-bottom:8px;
+  color:#0b4c7a;
+}
+.plan-inline img{
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius:12px;
+  border:1px solid rgba(0,0,0,.06);
+}
+
+
+
+
+/* ignora eventuali posizionamenti a griglia/coordinate dei tavoli */
+body.dashboard-wide #tablesGrid .table-card,
+body.dashboard-wide #tablesGrid .table-card *{
+  grid-column:auto !important;
+  grid-row:auto !important;
+}
+
+/* griglia compatta */
+body.dashboard-wide #tablesGrid{
+  display:grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: start !important;
+}
+
+/* riduci un filo padding/altezza card per compattezza */
+body.dashboard-wide .table-card{
+  width:auto !important;
+}
+
+
+#manualPlanWrap{
+  margin-top:12px;
+}
+
+
+
+#planModal{
+  display:none;
+}
+#planModal.open{
+  display:flex;
+}
+
+
+
+.plan-details summary{
+  cursor:pointer;
+  list-style:none;
+  font-weight:900;
+  padding:10px 12px;
+  border-radius:14px;
+  background:rgba(255,255,255,.85);
+  border:1px solid rgba(0,0,0,.08);
+  box-shadow:0 10px 22px rgba(0,0,0,.10);
+}
+.plan-details summary::-webkit-details-marker{ display:none; }
+.plan-details-body{
+  margin-top:10px;
+  padding:10px;
+  border-radius:14px;
+  background:rgba(255,255,255,.65);
+  border:1px solid rgba(0,0,0,.06);
+}
+.plan-details-body img{
+  width:100%;
+  height:auto;
+  display:block;
+  border-radius:12px;
+}
+
+
+/* === PIANTINA: dimensione aumentata === */
+.piantina-wrap img,
+details.piantina img{
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  transform: scale(1.15);
+  transform-origin: top center;
+}
+
+/* aumenta anche lo spazio del contenitore */
+details.piantina,
+.piantina-wrap{
+  margin-top: 16px;
+  padding: 10px;
+}
+
+
+/* === Piantina: stile natalizio elegante (solo cornice + stelline) === */
+.plan-details-body, .plan-inline, .plan-body {
+  position: relative;
+}
+.plan-details-body img, .plan-inline img, .plan-body img {
+  border-radius: 16px;
+  border: 2px solid rgba(212,175,55,.65);
+  box-shadow: 0 14px 34px rgba(0,0,0,.20);
+}
+/* Cornice morbida */
+.plan-details-body::before, .plan-inline::before, .plan-body::before {
+  content:"";
+  position:absolute;
+  inset:-10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.55);
+  border: 1px solid rgba(212,175,55,.25);
+  box-shadow: 0 10px 24px rgba(0,0,0,.10);
+  z-index: -1;
+}
+/* Stelline agli angoli (non coprono la piantina) */
+.plan-details-body::after, .plan-inline::after, .plan-body::after {
+  content:"";
+  position:absolute;
+  inset:-8px;
+  pointer-events:none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f7e7a6%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d4af37%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Cpath%20fill%3D%22url%28%23g%29%22%20d%3D%22M32%204l7.7%2018.2L60%2024.7%2044%2037.8%2048.8%2058%2032%2047.2%2015.2%2058%2020%2037.8%204%2024.7%2024.3%2022.2z%22/%3E%0A%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f7e7a6%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d4af37%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Cpath%20fill%3D%22url%28%23g%29%22%20d%3D%22M32%204l7.7%2018.2L60%2024.7%2044%2037.8%2048.8%2058%2032%2047.2%2015.2%2058%2020%2037.8%204%2024.7%2024.3%2022.2z%22/%3E%0A%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f7e7a6%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d4af37%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Cpath%20fill%3D%22url%28%23g%29%22%20d%3D%22M32%204l7.7%2018.2L60%2024.7%2044%2037.8%2048.8%2058%2032%2047.2%2015.2%2058%2020%2037.8%204%2024.7%2024.3%2022.2z%22/%3E%0A%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23f7e7a6%22/%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d4af37%22/%3E%0A%20%20%20%20%3C/linearGradient%3E%0A%20%20%3C/defs%3E%0A%20%20%3Cpath%20fill%3D%22url%28%23g%29%22%20d%3D%22M32%204l7.7%2018.2L60%2024.7%2044%2037.8%2048.8%2058%2032%2047.2%2015.2%2058%2020%2037.8%204%2024.7%2024.3%2022.2z%22/%3E%0A%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-size:44px 44px;
+  background-position:
+    left top,
+    right top,
+    left bottom,
+    right bottom;
+  opacity:.9;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,.15));
+}
+
+
+/* === AUTO-ESPANSIONE: nomi sempre visibili === */
+.table-card{ height:auto !important; max-height:none !important; }
+.table-card .people-list,
+.table-card .names-list{ max-height:none !important; overflow:visible !important; }
+.table-card .people-list li{
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  word-break:break-word !important;
+}
+
+/* === Numerazione più grande === */
+.table-card h3,
+.table-card .table-title,
+.table-card .title{
+  font-size:22px !important;
+  letter-spacing:.2px;
+}
+
+/* === Evidenzia CDA (Tavolo 12) === */
+.table-card.is-cda{
+  border:2px solid rgba(212,175,55,.88) !important;
+  box-shadow:0 14px 34px rgba(0,0,0,.10), 0 0 0 4px rgba(212,175,55,.20) !important;
+  position:relative;
+}
+.table-card.is-cda::before{
+  content:"CDA";
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:rgba(212,175,55,.95);
+  color:#1b1b1b;
+  font-weight:900;
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  box-shadow:0 10px 22px rgba(0,0,0,.18);
+}
+
+/* === Segno quando tavolo pieno === */
+.table-card.is-full{
+  border:2px solid rgba(0,140,90,.55) !important;
+  position:relative;
+}
+.table-card.is-full::after{
+  content:"✓ PIENO";
+  position:absolute;
+  bottom:10px;
+  right:10px;
+  background:rgba(0,140,90,.92);
+  color:#fff;
+  font-weight:900;
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  box-shadow:0 10px 22px rgba(0,0,0,.18);
+}
+
+
+/* === FIX: espansione reale (no lista scroll / no taglio) === */
+.table-card{
+  overflow: visible !important; /* prima era hidden e visivamente tagliava */
+}
+.table-card ul.people-list{
+  max-height: none !important;
+  overflow: visible !important;
+}
+.table-card .minus-btn{
+  margin-top: 10px !important;
+}
+
+
+/* === OVERRIDE SALA-LAYOUT: niente altezze fisse, card auto-espandibili === */
+#tablesGrid.sala-layout{
+  grid-auto-rows: auto !important;
+}
+#tablesGrid.sala-layout .table-card{
+  height: auto !important;
+  overflow: visible !important;
+}
+#tablesGrid.sala-layout .people-list{
+  max-height: none !important;
+  overflow: visible !important;
+}
+#tablesGrid.sala-layout .people-list li{
+  overflow: visible !important;
+}
+
+
+/* === FIX DEFINITIVO: niente sovrapposizioni quando le card crescono === */
+/* Forza auto-posizionamento nella griglia (ignora coordinate tipo grid-row/grid-column) */
+#tablesGrid .table-card{
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+/* Griglia compatta responsiva */
+#tablesGrid{
+  display:grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: start !important;
+}
+
+
+/* === DASHBOARD: nuova grafica griglia fluida (auto-espansione vera) === */
+body.dashboard-wide #tablesGrid{
+  display:grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+  gap: 14px !important;
+  align-items: start !important;
+  grid-auto-rows: auto !important;
+  position: relative !important;
+}
+
+/* annulla qualsiasi layout "a coordinate" */
+body.dashboard-wide #tablesGrid .table-card{
+  position: static !important;
+  top:auto !important; left:auto !important; right:auto !important; bottom:auto !important;
+  transform:none !important;
+  width:auto !important;
+  height:auto !important;
+  max-height:none !important;
+  overflow: visible !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+}
+
+/* lista nomi senza taglio */
+body.dashboard-wide #tablesGrid .people-list,
+body.dashboard-wide #tablesGrid .names-list{
+  max-height:none !important;
+  overflow:visible !important;
+}
+
+
+/* =========================
+   TV MODES (42" / 55")
+   Obiettivo: leggibilità a ~5 metri, TV alta.
+   Attivati dal pulsante "TV: OFF/42/55" (classi sul body).
+   ========================= */
+
+body.tv-42 #tablesGrid,
+body.tv-55 #tablesGrid{
+  /* forza griglia "pulita" e ariosa */
+  display:grid !important;
+  align-items:start !important;
+  grid-auto-rows: auto !important;
+}
+
+body.tv-42 #tablesGrid{ grid-template-columns: repeat(4, 1fr) !important; gap:18px !important; }
+body.tv-55 #tablesGrid{ grid-template-columns: repeat(5, 1fr) !important; gap:26px !important; }
+
+/* Card più "grandi" e leggibili */
+body.tv-42 .table-card,
+body.tv-55 .table-card{
+  padding: 14px 14px 12px !important;
+  border-radius: 16px !important;
+}
+
+/* Titoli tavolo */
+body.tv-42 .table-title{ font-size:28px !important; font-weight:900 !important; }
+body.tv-55 .table-title{ font-size:32px !important; font-weight:900 !important; }
+
+/* Info (es. 3/8 posti) */
+body.tv-42 .table-info{ font-size:16px !important; font-weight:700 !important; }
+body.tv-55 .table-info{ font-size:18px !important; font-weight:800 !important; }
+
+/* Nomi: priorità assoluta */
+body.tv-42 .people-list li{ font-size:18px !important; font-weight:600 !important; padding:8px 10px !important; }
+body.tv-55 .people-list li{ font-size:21px !important; font-weight:650 !important; padding:10px 12px !important; }
+
+/* Micro-contrasto per visione da lontano */
+body.tv-42 .people-list li,
+body.tv-55 .people-list li{
+  text-shadow: 0 0 2px rgba(0,0,0,.35) !important;
+}
+
+/* Badge CDA / PIENO più leggibili */
+body.tv-55 .table-card.is-cda::before,
+body.tv-55 .table-card.is-full::after{
+  font-size:14px !important;
+  padding:8px 14px !important;
+}
+body.tv-42 .table-card.is-cda::before,
+body.tv-42 .table-card.is-full::after{
+  font-size:13px !important;
+  padding:7px 12px !important;
+}
+
+/* Bottoni (evita micro-click) */
+body.tv-42 .btn-pill,
+body.tv-55 .btn-pill{
+  font-size:13px !important;
+  padding:8px 12px !important;
+}
+
+</style>
+</head>
+
+<body>
+<div id="snow-container"></div>
+
+<div class="container">
+  <img src="logo.jpg" class="logo" alt="Logo BCC Magna Grecia" />
+  <h1>Benvenuti all'evento "Insieme...a Natale"</h1>
+
+  <div id="bookingSection">
+    <div id="result" class="result"></div>
+
+    <div class="field">
+      <label>Nome e Cognome</label>
+      <input id="nameInput" type="text" />
+    </div>
+
+    <div class="field">
+      </div>
+
+    <button id="assignBtn">Scopri il tuo tavolo</button>
+
+  <details class="plan-details">
+    <summary>🗺️ Piantina sala</summary>
+    <div class="plan-details-body">
+      <img src="piantina_sala.png" alt="Piantina sala">
+    </div>
+  </details>
+
+  </div>
+
+  <audio id="bellSound" src="campane.mp3" preload="auto"></audio>
+
+  <div class="dashboard" id="dashboard">
+    <div class="dashboard-banner">
+      <div class="dashboard-banner-title">Benvenuti all'evento "Insieme...a Natale"</div>
+      <div class="dashboard-banner-sub">
+        L'unione è la nostra forza: ogni posto a tavola è un posto per condividere,
+        crescere e sentirci parte della stessa famiglia.
+      </div>
+      <div class="dashboard-banner-quote">
+        “Da soli possiamo fare così poco; insieme possiamo fare così tanto.”
+        <span>– Helen Keller</span>
+      </div>
+    </div>
+
+    <div class="dashboard-header">
+      <h2>Dashboard tavoli</h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+        <button id="fullscreenBtn" class="btn-pill gold">Full screen</button>
+        <button id="tvModeBtn" class="btn-pill gold" type="button">TV: OFF</button>
+        <button id="toggleSideBtn" class="btn-pill secondary">Pannello: ON</button>
+        <button id="zoomOutBtn" class="btn-pill secondary">−</button>
+        <button id="zoomResetBtn" class="btn-pill secondary">100%</button>
+        <button id="zoomInBtn" class="btn-pill secondary">+</button>
+<button id="freezeBtn" class="btn-pill">Congela: OFF</button>
+        <button id="loadCdaBtn" class="btn-pill gold">Carica CDA Tavolo 12</button>
+      <button id="seed180Btn" class="admin-btn">Simula 180 presenti</button>
+        <button id="resetBtn" class="btn-pill secondary">Azzera tavoli</button>
+      </div>
+    </div>
+
+    <div class="dashboard-layout">
+      <div id="dashboardSide" class="dashboard-side">
+        <div class="dashboard-summary">
+          Posti totali: <span id="totalSeats"></span> —
+          Occupati: <span id="occupiedSeats"></span> —
+          Liberi: <span id="freeSeats"></span>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-top">
+            <div>Progresso evento</div>
+            <div><span id="progressPct">0</span>%</div>
+          </div>
+          <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+        </div>
+
+        <div class="admin-box">
+          <h3>Ultimi 5 assegnati</h3>
+          <ol id="last5List" class="last5"></ol>
+        </div>
+
+        <div class="manual-add-panel">
+          <h3>Aggiunta manuale (organizzatori)</h3>
+          <div class="manual-add-grid">
+            <select id="manualTableSelect"></select>
+            <input id="manualNameInput" type="text" placeholder="Nome e cognome" />
+<div class="manual-add-actions">
+              <button id="manualAddBtn" class="add-btn" type="button">➕ Aggiungi</button>
+              <button id="manualQuickBtn" class="cda-btn" type="button">➕ Rapido (4 nomi)</button>
+            </div>
+          </div>
+
+        <div class="plan-inline">
+          <div class="plan-inline-title">Piantina sala</div>
+          <img src="piantina_sala.png" alt="Piantina sala">
+        </div>
+
+        </div>
+
+      </div>
+
+      <div id="dashboardMain" class="dashboard-main">
+        <div id="salaScale" class="sala-scale">
+          <div id="salaOverlay" class="sala-overlay" aria-hidden="true"></div>
+        <div id="tablesGrid" class="tables-grid sala-layout"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button id="showAdminBtn" class="admin-btn">Area organizzatori</button>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+// PATCH: remove '(CDA)' from displayed names only
+function displayName(v){
+  return String(v||'').replace(/\s*\(CDA\)\s*/gi,' ').replace(/\s+/g,' ').trim();
+}
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA1EWKdl7TXVXNJpxAR5Uj1e5h5vPgxtFk",
+  authDomain: "evento-bcc-magna-grecia.firebaseapp.com",
+  projectId: "evento-bcc-magna-grecia",
+  storageBucket: "evento-bcc-magna-grecia.firebasestorage.app",
+  messagingSenderId: "767111568452",
+  appId: "1:767111568452:web:aa7cfd66ae1995c5273011"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// 25 tavoli in planimetria (23 assegnabili dal sistema):
+// - Tavolo 12: CDA (RISERVATO, non assegnabile via random)
+// - Tavolo 25: OPZIONALE/EMERGENZE (RISERVATO, non assegnabile via random)
+// - Tavoli 22-23-24: 7 posti
+// - Tutti gli altri tavoli assegnabili: 8 posti
+const TABLE_COUNT = 25;
+
+const RESERVED_TABLES = new Set([12, 25]);
+
+// ===== CDA: lista fissa Tavolo 12 + aggiunte rapide =====
+const CDA_TABLE_ID = 12;
+const CDA_NAMES = [
+  "Tuozzo Giuseppe",
+  "Lucibello Pasquale",
+  "Gentile Pasquale",
+  "Ianni Francesco Paolo",
+  "Lefante Rosa",
+  "Mango Marcello Eliseo",
+  "Nigro Anna",
+  "Passaro Vincenzo",
+  "Priore Domenico",
+  "Saggese Vito",
+  "Sansone Celestino",
+  "Acri Antonio",
+  "Molinaro Bartolomeo",
+  "D'Aranno Giuseppina",
+  "Gaetano de Luca",
+  "Miraldi Marco",
+];
+
+// Aggiunta rapida (manuale)
+const QUICK_ADD_NAMES = [
+  "Molinaro Bartolomeo",
+  "D'Aranno Giuseppina",
+  "Miraldi Marco",
+  "De Luca Gaetano"
+];
+
+function isReservedTable(id){
+  return RESERVED_TABLES.has(id);
+}
+
+
+const TABLE_CAPACITY_MAP = Object.fromEntries(
+  Array.from({ length: TABLE_COUNT }, (_, i) => {
+    const id = i + 1;
+    let cap = 8;
+
+    if (RESERVED_TABLES.has(id)) cap = 0; // riservati: non conteggiati, non assegnabili
+    else if (id === 21 || id === 22 || id === 23 || id === 24) cap = 7;
+
+    return [id, cap];
+  })
+);
+
+// Totale posti SOLO sui tavoli assegnabili (esclude 12 e 25)
+const TOTAL_SEATS = Object.entries(TABLE_CAPACITY_MAP)
+  .filter(([k,v]) => !RESERVED_TABLES.has(parseInt(k,10)))
+  .reduce((sum,[k,v]) => sum + v, 0);
+
+function normalizeNameTokens(s){
+  return (s || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z\s]/g," ")
+    .split(/\s+/).filter(Boolean)
+    .sort()
+    .join(" ");
+}
+
+const dietaryRaw = [
+    ["Maria Ricciardone","Intollerante"],
+["Antonella Mondillo","Intollerante"],
+  ["Feo Fabrizio","Intollerante"],
+  ["Giovanna Sansone","Intollerante"],
+  ["Giuseppe Caggiano","Intollerante"],
+  ["Giuseppe Cupolo","Intollerante"],
+  ["Maria Corso","Intollerante"],
+  ["Monica Oriente","Intollerante"],
+  ["Propato Mario Domenico","Intollerante"],
+  ["Rosalia La Palomenta","Intollerante"],
+  ["Valeria Guercio","Intollerante"],
+  ["Vincenzo De Stefano","Intollerante"],
+  ["Marilena Longo","Vegetariana"],
+  ["Teresa Comite","Vegetariana"],
+  ["Andrea de Luca","Intollerante"]
+];
+const dietaryMap = new Map(dietaryRaw.map(([n,t]) => [normalizeNameTokens(n), t]));
+function dietaryTagFor(name){ return dietaryMap.get(normalizeNameTokens(name)) || null; }
+// ================== VINCOLO: AMODIO / RUOCCO MAI INSIEME ==================
+const CONFLICT_A = normalizeNameTokens("Andrea Amodio");
+const CONFLICT_B = normalizeNameTokens("Elvira Ruocco");
+
+function findTableIdByNormalizedName(norm){
+  for(const t of tables){
+    for(const b of t.bookings){
+      if(normalizeNameTokens(b.name) === norm) return t.id;
+    }
+  }
+  return null;
+}
+
+function forbiddenTableForName(name){
+  const norm = normalizeNameTokens(name);
+  if(norm === CONFLICT_A){
+    return findTableIdByNormalizedName(CONFLICT_B);
+  }
+  if(norm === CONFLICT_B){
+    return findTableIdByNormalizedName(CONFLICT_A);
+  }
+  return null;
+}
+
+let tables = [];
+let lastAssignedTable = null;
+let assignmentsFrozen = false;
+let prevFullSet = new Set();
+
+const result = document.getElementById("result");
+const nameInput = document.getElementById("nameInput");
+const officeInput = null;
+const bellSound = document.getElementById("bellSound");
+const snowContainer = document.getElementById("snow-container");
+const bookingSection = document.getElementById("bookingSection");
+
+const totalSeatsEl = document.getElementById("totalSeats");
+const occupiedSeatsEl = document.getElementById("occupiedSeats");
+const freeSeatsEl = document.getElementById("freeSeats");
+const tablesGrid = document.getElementById("tablesGrid");
+const resetBtn = document.getElementById("resetBtn");
+const dashboardEl = document.getElementById("dashboard");
+const assignBtn = document.getElementById("assignBtn");
+
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+const freezeBtn = document.getElementById("freezeBtn");
+
+const tvModeBtn = document.getElementById("tvModeBtn");
+
+
+const progressPct = document.getElementById("progressPct");
+const progressFill = document.getElementById("progressFill");
+const last5List = document.getElementById("last5List");
+
+const loadCdaBtn = document.getElementById("loadCdaBtn");
+
+const seed180Btn = document.getElementById("seed180Btn");
+const manualTableSelect = document.getElementById("manualTableSelect");
+const manualNameInput = document.getElementById("manualNameInput");
+const manualOfficeInput = document.getElementById("manualOfficeInput");
+const manualAddBtn = document.getElementById("manualAddBtn");
+const manualQuickBtn = document.getElementById("manualQuickBtn");
+
+function populateManualTableSelect(){
+  if(!manualTableSelect) return;
+  manualTableSelect.innerHTML = "";
+  for(let t=1; t<=TABLE_COUNT; t++){
+    const opt = document.createElement("option");
+    opt.value = String(t);
+    opt.textContent = `Tavolo ${t}` + (t===CDA_TABLE_ID ? "" : (t===25 ? " (Emergenze)" : ""));
+    manualTableSelect.appendChild(opt);
+  }
+  manualTableSelect.value = String(CDA_TABLE_ID);
+}
+populateManualTableSelect();
+
+async function addManualBooking(tableId, name, office){
+  const n = (name || "").trim();
+  const o = (office || "").trim();
+  if(!n){
+    alert("Inserisci un nome.");
+    return;
+  }
+  // Se office vuoto: per CDA mettiamo "CDA", altrimenti "—"
+  const officeFinal = o || (tableId === CDA_TABLE_ID ? "CDA" : "—");
+
+  await db.collection("bookings").add({
+    name: n,
+    office: officeFinal,
+    table: tableId,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+manualAddBtn?.addEventListener("click", async ()=>{
+  const tableId = parseInt(manualTableSelect.value, 10);
+  try{
+    await addManualBooking(tableId, manualNameInput.value, (manualOfficeInput ? manualOfficeInput.value : ""));
+    manualNameInput.value = "";
+    if(manualOfficeInput) if(manualOfficeInput) manualOfficeInput.value = "";
+    manualNameInput.focus();
+  }catch(err){
+    console.error(err);
+    alert("Errore nell'aggiunta. Riprova.");
+  }
+});
+
+manualQuickBtn?.addEventListener("click", async ()=>{
+  const tableId = parseInt(manualTableSelect.value, 10);
+  try{
+    for(const n of QUICK_ADD_NAMES){
+      await addManualBooking(tableId, n, tableId===CDA_TABLE_ID ? "CDA" : "—");
+    }
+    alert("Aggiunti i 4 nomi.");
+  }catch(err){
+    console.error(err);
+    alert("Errore nell'aggiunta rapida.");
+  }
+});
+
+// Carica CDA su Tavolo 12: aggiunge solo i mancanti (evita duplicati per nome normalizzato)
+async function loadCDA(){
+  const snap = await db.collection("bookings").get();
+  const existingNorm = new Set();
+  snap.forEach(doc=>{
+    const d = doc.data();
+    if(d && typeof d.name === "string"){
+      existingNorm.add(normalizeNameTokens(d.name));
+    }
+  });
+
+  const toAdd = CDA_NAMES.filter(n => !existingNorm.has(normalizeNameTokens(n)));
+  if(toAdd.length === 0){
+    alert("CDA già presente (nessun nome da aggiungere).");
+    return;
+  }
+
+  for(const n of toAdd){
+    await addManualBooking(CDA_TABLE_ID, n, "CDA");
+  }
+  alert(`Caricati ${toAdd.length} nomi CDA nel Tavolo 12.`);
+}
+
+loadCdaBtn?.addEventListener("click", async ()=>{
+  const ok = confirm("Caricare la lista CDA nel Tavolo 12? (Aggiunge solo i nomi mancanti)");
+  if(!ok) return;
+  try{
+    await loadCDA();
+  }catch(err){
+    console.error(err);
+    alert("Errore nel caricamento CDA.");
+  }
+});
+
+
+
+// === SIMULAZIONE: 180 presenti random (esclude CDA e tavoli riservati) ===
+seed180Btn?.addEventListener("click", async ()=>{
+  if(!confirm("Vuoi simulare 180 presenti random ai tavoli (escludendo CDA)? Verranno aggiunte 180 prenotazioni.")) return;
+
+  // Genera nomi casuali unici
+  const firstNames = ["Luca","Marco","Giulia","Sara","Francesco","Alessia","Matteo","Chiara","Giorgio","Elena","Davide","Martina","Paolo","Valentina","Stefano","Ilaria","Simone","Federica","Andrea","Roberta","Nicola","Silvia","Fabio","Laura","Daniele","Miriam","Pietro","Grazia","Enrico","Claudia"];
+  const lastNames  = ["Rossi","Russo","Ferrari","Esposito","Bianchi","Romano","Gallo","Costa","Fontana","Conti","Marino","Greco","Lombardi","Moretti","Barbieri","Rinaldi","Santoro","De Luca","Mancini","Giordano","Rizzo","Caruso","Colombo","Ricci","Bruno","Sanna","Ferri","Testa","Parisi","Amato"];
+
+  const assignable = [];
+  for(let id=1; id<=TABLE_COUNT; id++){
+    if(RESERVED_TABLES.has(id)) continue;
+    if(id === CDA_TABLE_ID) continue;
+    assignable.push(id);
+  }
+
+  // Capacità per tavolo
+  const capOf = (id)=> TABLE_CAPACITY_MAP[id] ?? 8;
+
+  // Occupazione locale per distribuire
+  const used = {};
+  assignable.forEach(id => used[id]=0);
+
+  // Riempi sempre i tavoli meno pieni
+  function pickTable(){
+    let min = Infinity;
+    assignable.forEach(id => { if(used[id] < min) min = used[id]; });
+    const candidates = assignable.filter(id => used[id] === min && used[id] < capOf(id));
+    // se tutti pieni (non dovrebbe), fallback
+    const pool = candidates.length ? candidates : assignable.filter(id => used[id] < capOf(id));
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+
+  const wanted = 180;
+  const names = new Set();
+
+  // Inserisci Maria Ricciardone (intollerante) tra i 180, se non già presente
+  const fixed = ["Maria Ricciardone"];
+  fixed.forEach(n=>names.add(n));
+
+  while(names.size < wanted){
+    const n = `${firstNames[Math.floor(Math.random()*firstNames.length)]} ${lastNames[Math.floor(Math.random()*lastNames.length)]}`;
+    // evita CDA e duplicati
+    if(CDA_NAMES.some(c=> normalizeNameTokens(c) === normalizeNameTokens(n))) continue;
+    names.add(n);
+  }
+
+  const list = Array.from(names);
+
+  // Batch write (più veloce e stabile)
+  const batch = db.batch();
+  let count = 0;
+  for(const n of list){
+    const tableId = pickTable();
+    used[tableId]++;
+
+    const ref = db.collection("bookings").doc();
+    // office = "—" per simulazione
+    batch.set(ref, {
+      name: n,
+      office: "—",
+      table: tableId,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    count++;
+  }
+
+  try{
+    await batch.commit();
+    alert(`Simulazione completata: ${count} presenti inseriti.`);
+  }catch(e){
+    console.error(e);
+    alert("Errore durante la simulazione: controlla console.");
+  }
+});
+totalSeatsEl.textContent = TOTAL_SEATS;
+
+function playBell(){
+  try{ bellSound.volume = 1; bellSound.currentTime = 0; bellSound.play(); }catch(e){}
+}
+function launchSnow(){
+  for(let i=0;i<60;i++){
+    const s = document.createElement("div");
+    s.classList.add("snowflake");
+    s.textContent = "✧";
+    s.style.left = Math.random()*100 + "vw";
+    s.style.animationDelay = (Math.random()*2.5) + "s";
+    s.style.fontSize = (32 + Math.random()*18) + "px";
+    snowContainer.appendChild(s);
+    setTimeout(()=>s.remove(),11000);
+  }
+}
+function setFreezeUI(){
+  freezeBtn.textContent = assignmentsFrozen ? "Congela: ON" : "Congela: OFF";
+  freezeBtn.style.background = assignmentsFrozen ? "#6d6d6d" : "var(--bcc-blue)";
+}
+
+function rebuildTablesFromSnapshot(snapshot){
+  tables = Array.from({length:TABLE_COUNT}, (_,i)=>({
+    id:i+1,
+    capacity: TABLE_CAPACITY_MAP[i+1],
+    bookings:[]
+  }));
+
+  snapshot.forEach(doc=>{
+    const data = doc.data();
+    const tableId = data.table;
+    if(typeof tableId==="number" && tableId>=1 && tableId<=TABLE_COUNT){
+      tables[tableId-1].bookings.push({
+        id: doc.id,
+        name: data.name || "",
+        office: data.office || "",
+        createdAt: data.createdAt || null
+      });
+    }
+  });
+
+  if(snapshot.docs.length>0){
+    const lastDoc = snapshot.docs[snapshot.docs.length-1];
+    const lastData = lastDoc.data();
+    if(lastData && typeof lastData.table==="number"){
+      lastAssignedTable = lastData.table;
+    }
+  }else{
+    lastAssignedTable = null;
+  }
+
+  const lastDocs = snapshot.docs.slice(-5);
+  last5List.innerHTML = "";
+  lastDocs.forEach(d=>{
+    const x = d.data();
+    const li = document.createElement("li");
+    li.textContent = `${x.name || "?"} → Tavolo ${x.table || "?"}`;
+    last5List.appendChild(li);
+  });
+}
+
+function allFull(){
+  return tables
+    .filter(t => !RESERVED_TABLES.has(t.id))
+    .every(t => t.bookings.length >= t.capacity);
+}
+
+function renderDashboard(){
+  const occupied = tables.filter(t=>!isReservedTable(t.id)).reduce((sum,t)=>sum + t.bookings.length, 0);
+  const free = TOTAL_SEATS - occupied;
+
+  totalSeatsEl.textContent = TOTAL_SEATS;
+  occupiedSeatsEl.textContent = occupied;
+  freeSeatsEl.textContent = free;
+
+  const pct = TOTAL_SEATS === 0 ? 0 : Math.round((occupied / TOTAL_SEATS) * 100);
+  progressPct.textContent = pct;
+  progressFill.style.width = pct + "%";
+
+  tablesGrid.innerHTML = "";
+
+  const nowFullSet = new Set(
+    tables.filter(t => !isReservedTable(t.id) && t.bookings.length >= t.capacity).map(t => t.id)
+  );
+
+  tables.forEach(t=>{
+    const used = t.bookings.length;
+    const cap = t.capacity;
+    const perc = cap === 0 ? 0 : (used / cap) * 100;
+
+    const card = document.createElement("div");
+    card.className = "table-card";
+    card.classList.add(`t${t.id}`);
+
+    if(!isReservedTable(t.id) && cap > 0){
+      if(used === cap){
+        card.classList.add("full");
+        if(!prevFullSet.has(t.id)){
+          card.classList.add("flash-full");
+          setTimeout(()=>card.classList.remove("flash-full"), 2600);
+        }
+      }else if(used === cap - 1){
+        card.classList.add("nearly-full");
+      }
+    }
+
+    const MAX_NAMES_IN_CARD = 50;
+    const shown = t.bookings.slice(0, MAX_NAMES_IN_CARD);
+    const remaining = Math.max(0, t.bookings.length - shown.length);
+
+    const peopleHtml = (t.bookings.length)
+      ? `<ul class="people-list">${
+          shown.map(p=>{
+            const tag = dietaryTagFor(p.name);
+            const cls = tag === "Intollerante" ? "tag-intollerante"
+                    : tag === "Vegetariana" ? "tag-vegetariano"
+                    : "";
+            return `<li class="${cls}" title="${displayName(p.name)} (${p.office})">`
+              + `<span class="person-text">${displayName(p.name)} (${p.office})</span>`
+              + `<button class="remove-person" data-booking-id="${p.id}" title="Rimuovi">❌</button>`
+              + `</li>`;
+          }).join("")
+        }</ul>${remaining ? `<div class="people-more">+${remaining} altri</div>` : ``}`
+      : `<div class="people-empty">—</div>`;
+
+    if(isReservedTable(t.id)){
+      const label = (t.id === CDA_TABLE_ID) ? "CDA (riservato)" : (t.id === 25 ? "Emergenze (riservato)" : "Riservato");
+      card.innerHTML = `
+      <div class="table-title">Tavolo ${t.id}</div>
+      <div class="table-info"><strong>${label}</strong></div>
+      ${peopleHtml}
+      <button class="minus-btn" data-table-id="${t.id}" disabled>-1 posto</button>
+    `;
+    }else{
+    card.innerHTML = `
+      <div class="table-title">Tavolo ${t.id}</div>
+      <div class="table-info">${used} / ${cap} posti</div>
+      <div class="mini-progress"><div style="width:${perc}%;"></div></div>
+      ${peopleHtml}
+      <button class="minus-btn" data-table-id="${t.id}" ${used===0 ? "disabled" : ""}>-1 posto</button>
+    `;
+  }
+tablesGrid.appendChild(card);
+  });
+
+  prevFullSet = nowFullSet;
+}
+
+db.collection("bookings")
+  .orderBy("createdAt","asc")
+  .onSnapshot(snapshot=>{
+    rebuildTablesFromSnapshot(snapshot);
+    renderDashboard();
+  });
+
+tablesGrid.addEventListener("click",(e)=>{
+  // Rimozione puntuale (❌ vicino al nome)
+  const removeBtn = e.target.closest(".remove-person");
+  if(removeBtn){
+    const bid = removeBtn.getAttribute("data-booking-id");
+    if(bid){
+      const ok = confirm("Rimuovere questa persona dal tavolo?");
+      if(ok){
+        db.collection("bookings").doc(bid).delete().catch(console.error);
+      }
+    }
+    return;
+  }
+
+  // Rimozione rapida: -1 posto (rimuove l'ultimo)
+  if(!e.target.classList.contains("minus-btn")) return;
+  const id = parseInt(e.target.getAttribute("data-table-id"),10);
+  const table = tables.find(t=>t.id===id);
+  if(!table) return;
+
+  if(table.bookings.length>0){
+    const lastBooking = table.bookings[table.bookings.length-1];
+    if(lastBooking && lastBooking.id){
+      db.collection("bookings").doc(lastBooking.id).delete().catch(console.error);
+    }
+  }
+});
+
+function spinNumber(durationMs=1400, tickMs=65){
+  return new Promise(resolve=>{
+    const start = performance.now();
+    const interval = setInterval(()=>{
+      const r = 1 + Math.floor(Math.random()*TABLE_COUNT);
+      const existing = result.querySelector(".table-number");
+      if(existing){
+        existing.textContent = r;
+      }else{
+        result.innerHTML =
+          `<span class='table-label'>Il tuo tavolo è il</span>
+           <span class='table-number'>${r}</span>
+           <div class='motto'>Una sera, una squadra, una famiglia</div>`;
+      }
+      if(performance.now() - start >= durationMs){
+        clearInterval(interval);
+        resolve();
+      }
+    }, tickMs);
+  });
+}
+
+assignBtn.onclick = async ()=>{
+  if(assignBtn.disabled) return;
+
+  if(assignmentsFrozen){
+    result.textContent = "Assegnazioni momentaneamente sospese. Attendi lo staff.";
+    return;
+  }
+
+  const name = nameInput.value.trim();
+  const office = "—";
+
+  if(!name){
+    result.textContent = "Inserisci Nome e Cognome.";
+    return;
+  }
+
+  if(allFull()){
+    result.textContent = `Tutti i tavoli sono pieni (${TOTAL_SEATS} posti).`;
+    return;
+  }
+
+  const norm = normalizeNameTokens(name);
+  const already = tables.some(t => t.bookings.some(b => normalizeNameTokens(b.name) === norm));
+  if(already){
+    const ok = confirm("Questo nome risulta già assegnato a un tavolo. Vuoi continuare comunque?");
+    if(!ok) return;
+  }
+
+  assignBtn.disabled = true;
+
+  try{
+    result.innerHTML =
+      `<span class='welcome'><strong>${displayName(name)}</strong> (${office})</span>
+       <span class='table-label'>Estrazione in corso…</span>
+       <span class='table-number'>—</span>
+       <div class='motto'>Una sera, una squadra, una famiglia</div>`;
+
+    await spinNumber(1400, 65);
+
+    let available = tables.filter(t => !RESERVED_TABLES.has(t.id) && t.bookings.length < t.capacity);
+
+    if(lastAssignedTable !== null){
+      const filtered = available.filter(t => t.id !== lastAssignedTable);
+      if(filtered.length > 0) available = filtered;
+    }
+
+    
+    // vincolo Amodio/Ruocco (mai insieme)
+    const forbidden = forbiddenTableForName(name);
+    if(forbidden !== null){
+      available = available.filter(t => t.id !== forbidden);
+    }
+const chosen = available[Math.floor(Math.random()*available.length)];
+
+    await db.collection("bookings").add({
+      name,
+      office,
+      table: chosen.id,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    const tag = dietaryTagFor(name);
+    const badge =
+      tag === "Intollerante"
+        ? `<div style="margin-top:8px; display:inline-block; padding:6px 10px; border-radius:999px; background:#c62828; color:white; font-size:12px; font-weight:bold;">INTOLLERANTE</div>`
+        : tag === "Vegetariana"
+          ? `<div style="margin-top:8px; display:inline-block; padding:6px 10px; border-radius:999px; background:#ffeb3b; color:#111; font-size:12px; font-weight:bold;">VEGETARIANA</div>`
+          : "";
+
+    result.innerHTML =
+      `<span class='welcome'><strong>${displayName(name)}</strong> (${office})</span>
+       <span class='table-label'>Il tuo tavolo è il</span>
+       <span class='table-number'>${chosen.id}</span>
+       <div class='motto'>Una sera, una squadra, una famiglia</div>
+       ${badge}`;
+
+    playBell();
+    launchSnow();
+
+    nameInput.value = "";
+    if(officeInput) officeInput.value = "";
+    nameInput.focus();
+
+  }catch(err){
+    console.error(err);
+    result.textContent = "Si è verificato un errore, riprova tra qualche secondo.";
+  }finally{
+    assignBtn.disabled = false;
+  }
+};
+
+resetBtn.addEventListener("click", async ()=>{
+  const first = confirm("ATTENZIONE: vuoi avviare la procedura di azzeramento tavoli?");
+  if(!first) return;
+
+  const second = confirm("Confermi definitivamente? Partirà un countdown di 5 secondi.");
+  if(!second) return;
+
+  let sec = 5;
+  const original = resetBtn.textContent;
+  resetBtn.disabled = true;
+  resetBtn.textContent = `Reset tra ${sec}s…`;
+
+  const timer = setInterval(()=>{
+    sec--;
+    if(sec <= 0){
+      clearInterval(timer);
+    }else{
+      resetBtn.textContent = `Reset tra ${sec}s…`;
+    }
+  }, 1000);
+
+  await new Promise(r=>setTimeout(r, 5000));
+
+  try{
+    const snap = await db.collection("bookings").get();
+
+    if(snap.empty){
+      lastAssignedTable = null;
+      result.textContent = "";
+      alert("Nessuna prenotazione da azzerare.");
+      return;
+    }
+
+    const deletions = [];
+    snap.forEach(doc=>{
+      deletions.push(db.collection("bookings").doc(doc.id).delete());
+    });
+    await Promise.all(deletions);
+
+    lastAssignedTable = null;
+    result.textContent = "";
+    alert("Tavoli azzerati correttamente!");
+  }catch(err){
+    console.error("Errore reset:", err);
+    alert("Errore nell'azzeramento dei tavoli. Riprova.");
+  }finally{
+    resetBtn.disabled = false;
+    resetBtn.textContent = original;
+  }
+});
+
+freezeBtn.addEventListener("click", ()=>{
+  assignmentsFrozen = !assignmentsFrozen;
+  setFreezeUI();
+});
+
+setFreezeUI();
+
+// ===== TV MODE: OFF / 42" / 55" (ottimizzato per ~5 metri) =====
+let tvMode = (localStorage.getItem("tvMode") || "off"); // "off" | "42" | "55"
+
+function applyTvMode(){
+  document.body.classList.remove("tv-42","tv-55");
+  if(tvMode === "42") document.body.classList.add("tv-42");
+  if(tvMode === "55") document.body.classList.add("tv-55");
+
+  if(tvModeBtn){
+    tvModeBtn.textContent = tvMode === "off" ? "TV: OFF" : `TV: ${tvMode}"`;
+  }
+  localStorage.setItem("tvMode", tvMode);
+}
+applyTvMode();
+
+tvModeBtn?.addEventListener("click", ()=>{
+  // ciclo: OFF -> 42 -> 55 -> OFF
+  tvMode = (tvMode === "off") ? "42" : (tvMode === "42") ? "55" : "off";
+  applyTvMode();
+});
+
+fullscreenBtn.addEventListener("click", async ()=>{
+  try{
+    if(!document.fullscreenElement){
+      await document.documentElement.requestFullscreen();
+      fullscreenBtn.textContent = "Esci full screen";
+    }else{
+      await document.exitFullscreen();
+      fullscreenBtn.textContent = "Full screen";
+    }
+  }catch(e){
+    alert("Full screen non disponibile su questo dispositivo/browser.");
+  }
+});
+
+document.getElementById("showAdminBtn").addEventListener("click", ()=>{
+  const code = prompt("Codice organizzatore:");
+  if(code === "1109"){
+    const hidden = dashboardEl.style.display === "none" || dashboardEl.style.display === "";
+    if(hidden){
+      dashboardEl.style.display = "block";
+      bookingSection.style.display = "none";
+      document.body.classList.add("dashboard-wide");
+    }else{
+      dashboardEl.style.display = "none";
+      bookingSection.style.display = "block";
+      document.body.classList.remove("dashboard-wide");
+    }
+  }else if(code !== null){
+    alert("Codice errato");
+  }
+});
+
+// ===== UI: Zoom sala + Pannello richiudibile =====
+(function(){
+  const scaleEl = document.getElementById("salaScale");
+  const zoomOutBtn = document.getElementById("zoomOutBtn");
+  const zoomInBtn = document.getElementById("zoomInBtn");
+  const zoomResetBtn = document.getElementById("zoomResetBtn");
+  const toggleSideBtn = document.getElementById("toggleSideBtn");
+
+  let scale = 1.0;
+  const clamp = (v,min,max)=>Math.max(min, Math.min(max, v));
+
+  function applyScale(){
+    if(!scaleEl) return;
+    scaleEl.style.transform = `scale(${scale})`;
+    if(zoomResetBtn) zoomResetBtn.textContent = `${Math.round(scale*100)}%`;
+  }
+
+  zoomOutBtn?.addEventListener("click", ()=>{
+    scale = clamp(Math.round((scale - 0.1)*10)/10, 0.6, 1.2);
+    applyScale();
+  });
+  zoomInBtn?.addEventListener("click", ()=>{
+    scale = clamp(Math.round((scale + 0.1)*10)/10, 0.6, 1.2);
+    applyScale();
+  });
+  zoomResetBtn?.addEventListener("click", ()=>{
+    scale = 1.0;
+    applyScale();
+  });
+
+  toggleSideBtn?.addEventListener("click", ()=>{
+    document.body.classList.toggle("side-collapsed");
+    const on = !document.body.classList.contains("side-collapsed");
+    toggleSideBtn.textContent = `Pannello: ${on ? "ON" : "OFF"}`;
+    // quando chiudi pannello, spesso serve un piccolo zoom-out per far entrare tutto
+    if(!on && scale === 1.0){
+      scale = 0.9;
+      applyScale();
+    }
+  });
+
+  // default: lascia 100%
+  applyScale();
+})();
+
+</script>
+
+  <!-- PIANTINA: modal per colleghi/ospiti -->
+  <div id="planModal" class="plan-modal" aria-hidden="true">
+    <div class="plan-card" role="dialog" aria-modal="true" aria-label="Piantina sala">
+      <div class="plan-head">
+        <div class="title">Piantina sala — Ingresso in basso al centro</div>
+        <button id="planCloseBtn" class="plan-close" type="button" aria-label="Chiudi">×</button>
+      </div>
+      <div class="plan-body">
+        <img src="piantina_sala.png" alt="Piantina sala">
+      </div>
+    </div>
+  </div>
+
+
+  </body>
+</html>
